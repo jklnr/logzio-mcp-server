@@ -1,0 +1,40 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "@typescript-eslint/recommended",
+    "@typescript-eslint/recommended-requiring-type-checking",
+    "prettier"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "env": {
+    "node": true,
+    "es2022": true
+  },
+  "rules": {
+    "prettier/prettier": "error",
+    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/explicit-function-return-type": "error",
+    "@typescript-eslint/no-inferrable-types": "off",
+    "@typescript-eslint/prefer-readonly": "error",
+    "@typescript-eslint/prefer-readonly-parameter-types": "off",
+    "@typescript-eslint/strict-boolean-expressions": "error",
+    "@typescript-eslint/switch-exhaustiveness-check": "error",
+    "complexity": ["error", 10],
+    "max-lines-per-function": ["error", { "max": 50 }],
+    "max-lines": ["error", { "max": 200 }],
+    "max-params": ["error", 5],
+    "max-depth": ["error", 4],
+    "no-console": "warn",
+    "prefer-const": "error",
+    "no-var": "error"
+  },
+  "ignorePatterns": ["dist/", "node_modules/", "*.js"]
+} 
