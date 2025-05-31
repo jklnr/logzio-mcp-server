@@ -4,7 +4,7 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 
-A production-ready [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that enables AI assistants like Claude to interact with [Logz.io](https://logz.io/)'s log management platform. Search logs, execute complex queries, and retrieve statistics - all through natural language interactions.
+A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that enables AI assistants like Claude to interact with [Logz.io](https://logz.io/)'s log management platform. Search logs, execute complex queries, and retrieve statistics - all through natural language interactions.
 
 ## ✨ Features
 
@@ -12,88 +12,43 @@ A production-ready [Model Context Protocol](https://modelcontextprotocol.io/) (M
 - 🧮 **Advanced Queries**: Execute powerful Lucene queries for precise log analysis  
 - 📊 **Statistics**: Retrieve aggregated log metrics and trends
 - 🚀 **High Performance**: Built with TypeScript, robust error handling, and retry logic
-- 🛡️ **Production Ready**: Comprehensive validation, logging, and security best practices
 - 🌍 **Multi-Region Support**: Supports all Logz.io regions (US, EU, CA, AU, UK)
 
 ## 🚀 Quick Start
 
-### Installation Options
-
-#### 1. Use directly with npx (Recommended)
-```bash
-# Always use latest version
-npx mcp-server-logzio apiKey YOUR_API_KEY
-
-# Use specific version for production
-npx mcp-server-logzio@0.1.0 apiKey YOUR_API_KEY region eu
-```
-
-#### 2. Install globally
-```bash
-# Install latest version globally
-npm install -g mcp-server-logzio
-
-# Use the global installation
-mcp-server-logzio apiKey YOUR_API_KEY
-```
-
-#### 3. Install locally in your project
-```bash
-# Add to your project
-npm install mcp-server-logzio
-
-# Use with npx from your project
-npx mcp-server-logzio apiKey YOUR_API_KEY
-```
-
-### Basic Usage
-
-```bash
-# Start the server with your Logz.io credentials (defaults to US region)
-npx mcp-server-logzio apiKey YOUR_API_KEY
-
-# Specify a region
-npx mcp-server-logzio apiKey YOUR_API_KEY region eu
-
-# Use a custom URL
-npx mcp-server-logzio apiKey YOUR_API_KEY logzioUrl https://api-ca.logz.io
-
-# Using environment variables
-export LOGZIO_API_KEY=your-api-key
-export LOGZIO_REGION=eu
-npx mcp-server-logzio
-```
-
-### Claude Configuration
-
-Add this to your Claude configuration file:
+Add this to your Claude/Cursor/etc configuration file:
 
 ```json
 {
   "mcpServers": {
+    
+    // other servers ...
+    
     "logzio": {
       "command": "npx",
       "args": [
         "mcp-server-logzio", 
-        "apiKey", "YOUR_API_KEY",
-        "region", "us"
+        "apiKey", "YOUR_LOGZIO_API_KEY"
       ]
     }
   }
 }
 ```
 
-For other regions:
+US is the default region. For other regions:
 
 ```json
 {
   "mcpServers": {
+    
+    // other servers ...
+    
     "logzio": {
       "command": "npx", 
       "args": [
         "mcp-server-logzio",
-        "apiKey", "YOUR_API_KEY",
-        "region", "eu"
+        "apiKey", "YOUR_LOGZIO_API_KEY",
+        "region", "eu" // add this for example
       ]
     }
   }
@@ -128,7 +83,7 @@ Once connected, you can interact with your Logz.io logs through natural language
 "Analyze log distribution by Kubernetes namespace"
 ```
 
-## 🛠️ Configuration
+## 🛠️ Advanced Configuration
 
 ### Command Line Arguments
 
@@ -140,18 +95,6 @@ Once connected, you can interact with your Logz.io logs through natural language
 | `--timeout <ms>` | Request timeout | 30000 | No |
 | `--retry-attempts <num>` | Retry attempts | 3 | No |
 | `--max-results <num>` | Max results per query | 1000 | No |
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `LOGZIO_API_KEY` | Alternative to `apiKey` argument | - |
-| `LOGZIO_REGION` | Logz.io region | us |
-| `LOGZIO_URL` | Custom API URL (overrides region) | - |
-| `LOGZIO_TIMEOUT` | Request timeout in milliseconds | 30000 |
-| `LOGZIO_RETRY_ATTEMPTS` | Number of retry attempts | 3 |
-| `LOGZIO_MAX_RESULTS` | Maximum results per query | 1000 |
-| `LOG_LEVEL` | Logging level (debug, info, warn, error) | info |
 
 ### Supported Regions
 
@@ -203,7 +146,7 @@ Retrieve aggregated log statistics and metrics.
 - `from`/`to`: Custom time range (ISO 8601)
 - `groupBy`: Fields to group by
 
-## 🏗️ Development
+## 🏗️ Development, if you want to mess with the code
 
 ### Prerequisites
 
@@ -257,78 +200,8 @@ mcp-server-logzio/
 └── dist/              # Compiled output
 ```
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for details.
-
-### Getting Started
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes following our code standards
-4. Add tests for new functionality
-5. Ensure all tests pass: `npm test`
-6. Submit a pull request
-
-### Code Standards
-
-- Follow TypeScript best practices
-- Maintain test coverage above 90%
-- Use conventional commits
-- Keep functions under 50 lines
-- Keep files under 200 lines
-- Add JSDoc comments for public APIs
-
-## 📚 Documentation
-
-- [API Documentation](docs/API.md)
-- [Configuration Guide](docs/CONFIGURATION.md)
-- [Contributing Guide](docs/CONTRIBUTING.md)
-- [Examples](examples/)
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Authentication Error**
-```
-Error: Unauthorized: Please check your API key
-```
-- Verify your API key is correct
-- Ensure you're using the right region
-
-**Connection Timeout**
-```
-Error: Request timeout
-```
-- Check your network connection
-- Try increasing the timeout: `--timeout 60000`
-
-**Rate Limiting**
-```
-Error: Rate limit exceeded
-```
-- The server automatically retries with backoff
-- Reduce query frequency if persistent
-
-### Debug Mode
-
-Enable debug logging for troubleshooting:
-
-```bash
-LOG_LEVEL=debug npx mcp-server-logzio apiKey YOUR_KEY
-```
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - [Logz.io](https://logz.io/) for their excellent logging platform
 - [Model Context Protocol](https://modelcontextprotocol.io/) team for the MCP specification
-- [Anthropic](https://anthropic.com/) for Claude and MCP support
-
----
-
-**Made with ❤️ by the MCP Community**
+- [Cursor](https://www.cursor.com/) / [Claude](https://claude.ai/) for writing 99% of the code in this project
