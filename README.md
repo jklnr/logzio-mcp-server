@@ -27,6 +27,7 @@ Add this to your Claude/Cursor/etc configuration file:
     "logzio": {
       "command": "npx",
       "args": [
+        "-y",
         "mcp-server-logzio", 
         "apiKey", "YOUR_LOGZIO_API_KEY"
       ]
@@ -46,6 +47,7 @@ US is the default region. For other regions:
     "logzio": {
       "command": "npx", 
       "args": [
+        "-y",
         "mcp-server-logzio",
         "apiKey", "YOUR_LOGZIO_API_KEY",
         "region", "eu" # add this for example
