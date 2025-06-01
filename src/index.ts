@@ -112,9 +112,7 @@ process.on('uncaughtException', (error) => {
 });
 
 // Start the application
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
-    console.error('Startup failed:', error);
-    process.exit(1);
-  });
-} 
+main().catch((error) => {
+  console.error('Startup failed:', error);
+  process.exit(1);
+}); 
