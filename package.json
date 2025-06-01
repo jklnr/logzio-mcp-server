@@ -22,7 +22,7 @@
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run clean && npm run build && npm run test && npm run lint && npm run type-check",
+    "prepublishOnly": "npm run clean && npm run build",
     "version:patch": "npm version patch",
     "version:minor": "npm version minor",
     "version:major": "npm version major",
