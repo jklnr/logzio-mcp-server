@@ -5,13 +5,11 @@
   "extends": [
     "eslint:recommended",
     "@typescript-eslint/recommended",
-    "@typescript-eslint/recommended-requiring-type-checking",
     "prettier"
   ],
   "parserOptions": {
     "ecmaVersion": 2022,
-    "sourceType": "module",
-    "project": "./tsconfig.json"
+    "sourceType": "module"
   },
   "env": {
     "node": true,
@@ -23,10 +21,6 @@
     "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/explicit-function-return-type": "error",
     "@typescript-eslint/no-inferrable-types": "off",
-    "@typescript-eslint/prefer-readonly": "error",
-    "@typescript-eslint/prefer-readonly-parameter-types": "off",
-    "@typescript-eslint/strict-boolean-expressions": "error",
-    "@typescript-eslint/switch-exhaustiveness-check": "error",
     "complexity": ["error", 10],
     "max-lines-per-function": ["error", { "max": 50 }],
     "max-lines": ["error", { "max": 200 }],

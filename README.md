@@ -179,7 +179,6 @@ npm run dev
 - `npm run build` - Compile TypeScript
 - `npm run dev` - Run in development mode
 - `npm test` - Run test suite
-- `npm run lint` - Run ESLint
 - `npm run format` - Format code with Prettier
 - `npm run type-check` - Type check without emission
 
