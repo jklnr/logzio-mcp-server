@@ -11,8 +11,6 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that e
 - 🔍 **Search Logs**: Simple text searches with time ranges and filters
 - 🧮 **Advanced Queries**: Execute powerful Lucene queries for precise log analysis  
 - 📊 **Statistics**: Retrieve aggregated log metrics and trends
-- 🚀 **High Performance**: Built with TypeScript, robust error handling, and retry logic
-- 🌍 **Multi-Region Support**: Supports all Logz.io regions (US, EU, CA, AU, UK)
 
 ## 🚀 Quick Start
 
