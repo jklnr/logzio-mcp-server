@@ -1,0 +1,81 @@
+{
+  "name": "mcp-server-logzio",
+  "version": "0.1.2",
+  "description": "Model Context Protocol server for Logz.io log management platform",
+  "main": "dist/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src tests --ext .ts",
+    "lint:fix": "eslint src tests --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run clean && npm run build",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major",
+    "version:prerelease": "npm version prerelease",
+    "release:patch": "npm run version:patch && git push --follow-tags",
+    "release:minor": "npm run version:minor && git push --follow-tags",
+    "release:major": "npm run version:major && git push --follow-tags"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "logz.io",
+    "logging",
+    "observability",
+    "ai",
+    "claude"
+  ],
+  "author": "MCP Community",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/modelcontextprotocol/mcp-server-logzio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/modelcontextprotocol/mcp-server-logzio/issues"
+  },
+  "homepage": "https://github.com/modelcontextprotocol/mcp-server-logzio#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "axios": "^1.6.2",
+    "pino": "^8.17.0",
+    "pino-pretty": "^10.3.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "prettier": "^3.1.0",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "bin": {
+    "mcp-server-logzio": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+} 
