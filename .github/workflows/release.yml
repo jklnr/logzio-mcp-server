@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'  # Trigger on version tags like v0.1.0
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -61,18 +65,16 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release v${{ steps.get_version.outputs.VERSION }}
+          tag_name: ${{ github.ref_name }}
+          name: Release v${{ steps.get_version.outputs.VERSION }}
           draft: false
           prerelease: false
           body: |
             ## Changes in v${{ steps.get_version.outputs.VERSION }}
             
-            See [CHANGELOG.md](https://github.com/modelcontextprotocol/mcp-server-logzio/blob/main/CHANGELOG.md) for detailed changes.
+            See [CHANGELOG.md](https://github.com/jklnr/mcp-server-logzio/blob/main/CHANGELOG.md) for detailed changes.
             
             ## Installation
             
