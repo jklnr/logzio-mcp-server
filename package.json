@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-logzio",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Model Context Protocol server for Logz.io log management platform",
   "main": "dist/index.js",
   "type": "module",
