@@ -18,11 +18,11 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that e
 
 Add this to your Claude/Cursor/etc configuration file:
 
-```json
+```python
 {
   "mcpServers": {
     
-    // other servers ...
+    # other servers ...
     
     "logzio": {
       "command": "npx",
@@ -37,50 +37,22 @@ Add this to your Claude/Cursor/etc configuration file:
 
 US is the default region. For other regions:
 
-```json
+```python
 {
   "mcpServers": {
     
-    // other servers ...
+    # other servers ...
     
     "logzio": {
       "command": "npx", 
       "args": [
         "mcp-server-logzio",
         "apiKey", "YOUR_LOGZIO_API_KEY",
-        "region", "eu" // add this for example
+        "region", "eu" # add this for example
       ]
     }
   }
 }
-```
-
-## 📖 Usage
-
-Once connected, you can interact with your Logz.io logs through natural language:
-
-### Search Examples
-
-```
-"Search for error logs in the last 24 hours"
-"Find all logs containing 'database connection' from the web service"
-"Show me warnings from the last 6 hours with more than 50 results"
-```
-
-### Advanced Query Examples
-
-```
-"Execute Lucene query: level:ERROR AND service:api"
-"Search for status codes between 400 and 499 in the last hour"
-"Find logs where message contains 'timeout' AND host:prod-*"
-```
-
-### Statistics Examples
-
-```
-"Get log statistics for the last 7 days grouped by severity level"
-"Show me log volume trends for the past 24 hours"
-"Analyze log distribution by Kubernetes namespace"
 ```
 
 ## 🛠️ Advanced Configuration
