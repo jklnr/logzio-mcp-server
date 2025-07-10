@@ -4,13 +4,7 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that enables AI assistants like Claude to interact with [Logz.io](https://logz.io/)'s log management platform. Search logs, execute complex queries, and retrieve statistics - all through natural language interactions.
-
-## ✨ Features
-
-- 🔍 **Search Logs**: Simple text searches with time ranges and filters
-- 🧮 **Advanced Queries**: Execute powerful Lucene queries for precise log analysis  
-- 📊 **Statistics**: Retrieve aggregated log metrics and trends
+A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that enables AI assistants like Claude to interact with [Logz.io](https://logz.io/)'s log management platform. Includes tools for simple log search, Lucene query search, and fetching basic statistics from logz io.
 
 ## 🚀 Quick Start
 
@@ -89,6 +83,8 @@ The server automatically maps region codes to the correct Logz.io API endpoints:
 
 ## 🔧 Available Tools
 
+These are the tools your agent will see.
+
 ### `search_logs`
 Search through logs with simple queries and filters.
 
@@ -102,7 +98,7 @@ Search through logs with simple queries and filters.
 - `sort`: Sort order (asc/desc)
 
 ### `query_logs`
-Execute advanced Lucene queries for precise log analysis.
+For more advanced search using Lucene queries
 
 **Parameters:**
 - `luceneQuery` (required): Lucene query string
@@ -123,7 +119,7 @@ Retrieve aggregated log statistics and metrics.
 ### Prerequisites
 
 - Node.js 18+
-- TypeScript 5.3+
+- TypeScript 5.8+
 - Valid Logz.io account and API key
 
 ### Setup
@@ -170,9 +166,3 @@ mcp-server-logzio/
 ├── docs/              # Documentation
 └── dist/              # Compiled output
 ```
-
-## 🙏 Acknowledgments
-
-- [Logz.io](https://logz.io/) for their excellent logging platform
-- [Model Context Protocol](https://modelcontextprotocol.io/) team for the MCP specification
-- [Cursor](https://www.cursor.com/) / [Claude](https://claude.ai/) for writing 99% of the code in this project
