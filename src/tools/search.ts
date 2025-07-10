@@ -304,9 +304,9 @@ ${suggestions.length > 0 ? suggestions.join('\n') + '\n' : ''}`;
     
     if (error instanceof z.ZodError) {
       throw new ValidationError(
-        `Invalid parameters: ${error.errors.map(e => e.message).join(', ')}`,
+        `Invalid parameters: ${error.issues.map(e => e.message).join(', ')}`,
         undefined,
-        { zodError: error.errors }
+        { zodError: error.issues }
       );
     }
     

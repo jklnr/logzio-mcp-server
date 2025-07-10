@@ -59,7 +59,7 @@ export type LuceneQueryRequest = z.infer<typeof LuceneQueryRequestSchema>;
 export const LogStatsRequestSchema = z.object({
   timeRange: TimeRangeSchema,
   groupBy: z.array(z.string()).optional(),
-  filters: z.record(z.string()).optional(),
+  filters: z.record(z.string(), z.string()).optional(),
 });
 
 export type LogStatsRequest = z.infer<typeof LogStatsRequestSchema>;
