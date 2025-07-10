@@ -4,7 +4,9 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that enables AI assistants like Claude to interact with [Logz.io](https://logz.io/)'s log management platform. Includes tools for simple log search, Lucene query search, and fetching basic statistics from logz io.
+An *unofficial*\* [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that enables AI assistants like Claude to interact with [Logz.io](https://logz.io/)'s log management platform. Includes tools for simple log search, Lucene query search, and fetching basic statistics from logz io.
+
+\*I'll be a little surprised if logz io makes an *official* MCP server. Instead, they seem to be leaning heavily into integrating AI directly into their tooling, which makes sense, but doesn't give the user much flexibility over models or integration with external tools.. which is why this project exists.
 
 ## 🚀 Quick Start
 
