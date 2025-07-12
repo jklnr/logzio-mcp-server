@@ -26,6 +26,10 @@ export class LogzioMcpServer {
     this.server = new Server({
       name: 'mcp-server-logzio',
       version: '0.1.0',
+    }, {
+      capabilities: {
+        tools: {},
+      },
     });
 
     this.setupHandlers();

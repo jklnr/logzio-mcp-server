@@ -90,7 +90,15 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
-    console.error(`\nFatal Error: ${error instanceof Error ? error.message : 'Unknown error'}\n`);
+    // Log full error details for debugging
+    console.error(`\nFatal Error 1: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    if (error instanceof Error && error.stack) {
+      console.error('Stack trace:', error.stack);
+    }
+    if (error && typeof error === 'object') {
+      console.error('Error details:', JSON.stringify(error, null, 2));
+    }
+    console.error('');
     process.exit(1);
   }
 }
