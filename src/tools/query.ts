@@ -107,7 +107,7 @@ function formatLogEntry(log: any, index: number): string {
     ? summary.message.substring(0, 1000) + '...'
     : summary.message;
   
-  let formatted = `${index + 1}. [${timeStr}] ${summary.level.toUpperCase()}`;
+  let formatted = `${index + 1}. [${timeStr}] ${(summary.level || 'INFO').toString().toUpperCase()}`;
   
   if (summary.source) {
     formatted += ` (${summary.source})`;
