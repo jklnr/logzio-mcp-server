@@ -45,12 +45,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/modelcontextprotocol/mcp-server-logzio.git"
+    "url": "https://github.com/jklnr/mcp-server-logzio.git"
   },
   "bugs": {
-    "url": "https://github.com/modelcontextprotocol/mcp-server-logzio/issues"
+    "url": "https://github.com/jklnr/mcp-server-logzio/issues"
   },
-  "homepage": "https://github.com/modelcontextprotocol/mcp-server-logzio#readme",
+  "homepage": "https://github.com/jklnr/mcp-server-logzio#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.15.1",
     "axios": "^1.10.0",
