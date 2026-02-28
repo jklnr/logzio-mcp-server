@@ -156,6 +156,10 @@ function getApiErrorMessage(statusCode: number, data?: unknown): string {
  * Check if error is retryable
  */
 export function isRetryableError(error: unknown): boolean {
+  if (error instanceof RateLimitError) {
+    return true;
+  }
+
   if (error instanceof ApiError) {
     // Retry on 5xx errors and rate limits
     return (

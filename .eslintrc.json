@@ -4,7 +4,7 @@
   "plugins": ["@typescript-eslint", "prettier"],
   "extends": [
     "eslint:recommended",
-    "@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended",
     "prettier"
   ],
   "parserOptions": {
@@ -30,5 +30,15 @@
     "prefer-const": "error",
     "no-var": "error"
   },
-  "ignorePatterns": ["dist/", "node_modules/", "*.js"]
+  "ignorePatterns": ["dist/", "node_modules/", "*.js"],
+  "overrides": [
+    {
+      "files": ["tests/**/*.ts"],
+      "rules": {
+        "complexity": "off",
+        "max-lines-per-function": "off",
+        "max-lines": "off"
+      }
+    }
+  ]
 } 
