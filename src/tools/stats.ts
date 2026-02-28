@@ -138,12 +138,12 @@ export async function getLogStats(
     // Validate parameters
     const validatedParams = LogStatsParamsSchema.parse(params);
     
-    logger.info('Getting log statistics', {
+    logger.info({
       timeRange: validatedParams.timeRange,
       from: validatedParams.from,
       to: validatedParams.to,
       groupBy: validatedParams.groupBy,
-    });
+    }, 'Getting log statistics');
 
     // Determine time range
     let from = validatedParams.from;
@@ -177,12 +177,12 @@ export async function getLogStats(
     // Calculate actual stats time
     const statsDuration = Date.now() - statsStartTime;
     
-    logger.info('Statistics retrieved', {
+    logger.info({
       total: response.total,
       buckets: response.buckets?.length || 0,
       aggregations: Object.keys(response.aggregations || {}).length,
       took: statsDuration,
-    });
+    }, 'Statistics retrieved');
 
     // Generate suggestions
     const suggestions = generateStatsSuggestions(validatedParams, response);
@@ -212,7 +212,7 @@ ${suggestions.length > 0 ? suggestions.join('\n') + '\n' : ''}`;
     };
 
   } catch (error) {
-    logger.error('Get log statistics failed', error);
+    logger.error(error as Error, 'Get log statistics failed');
     
     if (error instanceof z.ZodError) {
       throw new ValidationError(

@@ -45,10 +45,10 @@ export class LogzioApiClient {
     // Request interceptor for logging
     instance.interceptors.request.use(
       (config) => {
-        this.logger.debug('Making API request', {
+        this.logger.debug({
           method: config.method,
           url: config.url,
-        });
+        }, 'Making API request');
         return config;
       },
       (error) => {
@@ -60,10 +60,10 @@ export class LogzioApiClient {
     // Response interceptor for logging and error handling
     instance.interceptors.response.use(
       (response) => {
-        this.logger.debug('Received API response', {
+        this.logger.debug({
           status: response.status,
           url: response.config.url,
-        });
+        }, 'Received API response');
         return response;
       },
       (error) => {
@@ -141,11 +141,11 @@ export class LogzioApiClient {
       if (attempt <= this.config.retryAttempts && isRetryableError(error)) {
         const delay = getRetryDelay(error) || this.calculateBackoffDelay(attempt);
         
-        this.logger.warn(`Request failed, retrying in ${delay}ms`, {
+        this.logger.warn({
           attempt,
           maxAttempts: this.config.retryAttempts,
           error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        }, `Request failed, retrying in ${delay}ms`);
 
         await this.sleep(delay);
         return this.makeRequest<T>(config, attempt + 1);

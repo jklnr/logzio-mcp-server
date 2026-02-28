@@ -60,12 +60,12 @@ async function main(): Promise<void> {
     const args = process.argv.slice(2);
     const config = parseConfig(args);
 
-    logger.info('Starting MCP server for Logz.io', {
+    logger.info({
       logzioUrl: config.logzioUrl,
       timeout: config.timeout,
       retryAttempts: config.retryAttempts,
       maxResults: config.maxResults,
-    });
+    }, 'Starting MCP server for Logz.io');
 
     // Create and start the server
     const server = new LogzioMcpServer(config);
@@ -75,14 +75,14 @@ async function main(): Promise<void> {
       await server.healthCheck();
       logger.info('Logz.io connectivity verified');
     } catch (error) {
-      logger.warn('Initial health check failed, but continuing', error);
+      logger.warn(error, 'Initial health check failed, but continuing');
     }
 
     // Start the MCP server
     await server.start();
 
   } catch (error) {
-    logger.error('Failed to start MCP server', error);
+    logger.error(error, 'Failed to start MCP server');
 
     if (error instanceof ConfigurationError) {
       console.error(`\nConfiguration Error: ${error.message}\n`);
@@ -106,7 +106,7 @@ async function main(): Promise<void> {
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   const logger = getLogger('main');
-  logger.error('Unhandled promise rejection', reason as Error, {
+  logger.error(reason as Error, 'Unhandled promise rejection', {
     promise: promise.toString(),
   });
   process.exit(1);
@@ -115,7 +115,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   const logger = getLogger('main');
-  logger.error('Uncaught exception', error);
+  logger.error(error, 'Uncaught exception');
   process.exit(1);
 });
 

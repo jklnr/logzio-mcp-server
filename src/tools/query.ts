@@ -175,10 +175,10 @@ export async function queryLogs(
     // Validate parameters
     const validatedParams = QueryLogsParamsSchema.parse(params);
     
-    logger.info('Executing Lucene query', {
+    logger.info({
       query: validatedParams.luceneQuery,
       size: validatedParams.size,
-    });
+    }, 'Executing Lucene query');
 
     // Analyze query for suggestions
     const queryAnalysis = analyzeLuceneQuery(validatedParams.luceneQuery);
@@ -231,12 +231,12 @@ export async function queryLogs(
       ? response.hits.total 
       : (response.hits.total as any)?.value || 0;
     
-    logger.info('Query completed', {
+    logger.info({
       total,
       returned: logs.length,
       took: queryDuration,
       complexity: queryAnalysis.complexity,
-    });
+    }, 'Query completed');
 
     // Format results with improved structure
     const formattedLogs = logs.map((hit, index) => formatLogEntry(hit._source, index));
@@ -262,7 +262,7 @@ ${queryAnalysis.suggestions.length > 0 ? queryAnalysis.suggestions.join('\n') + 
     };
 
   } catch (error) {
-    logger.error('Query logs failed', error);
+    logger.error(error as Error, 'Query logs failed');
     
     if (error instanceof z.ZodError) {
       throw new ValidationError(

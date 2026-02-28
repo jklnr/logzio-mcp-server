@@ -33,10 +33,10 @@ export class LogzioMcpServer {
     });
 
     this.setupHandlers();
-    this.logger.info('MCP server initialized', {
+    this.logger.info({
       logzioUrl: config.logzioUrl,
       toolCount: TOOLS.length,
-    });
+    }, 'MCP server initialized');
   }
 
   /**
@@ -57,10 +57,10 @@ export class LogzioMcpServer {
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name: toolName, arguments: args } = request.params;
       
-      this.logger.info('Tool call received', {
+      this.logger.info({
         toolName,
         hasArgs: Boolean(args),
-      });
+      }, 'Tool call received');
 
       if (!isValidTool(toolName)) {
         throw new McpError(
@@ -72,17 +72,18 @@ export class LogzioMcpServer {
       try {
         const result = await executeTool(toolName, this.client, args || {});
         
-        this.logger.info('Tool call completed', {
+        this.logger.info({
           toolName,
           contentLength: result.content[0]?.text?.length || 0,
-        });
+        }, 'Tool call completed');
 
         return result;
       } catch (error) {
-        this.logger.error('Tool call failed', error, {
+        this.logger.error({
+          err: error,
           toolName,
           errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-        });
+        }, 'Tool call failed');
 
         if (error instanceof ToolError) {
           throw new McpError(
@@ -127,14 +128,14 @@ export class LogzioMcpServer {
    * Shutdown the server gracefully
    */
   private async shutdown(signal: string): Promise<void> {
-    this.logger.info('Shutting down MCP server', { signal });
+    this.logger.info({ signal }, 'Shutting down MCP server');
     
     try {
       await this.server.close();
       this.logger.info('MCP server shutdown complete');
       process.exit(0);
     } catch (error) {
-      this.logger.error('Error during shutdown', error);
+      this.logger.error(error as Error, 'Error during shutdown');
       process.exit(1);
     }
   }
@@ -146,7 +147,7 @@ export class LogzioMcpServer {
     try {
       return await this.client.healthCheck();
     } catch (error) {
-      this.logger.error('Health check failed', error);
+      this.logger.error(error as Error, 'Health check failed');
       throw error;
     }
   }

@@ -201,18 +201,18 @@ export async function searchLogs(
     // Validate parameters
     const validatedParams = SearchLogsParamsSchema.parse(params);
     
-    logger.info('Searching logs', {
+    logger.info({
       query: validatedParams.query,
       timeRange: validatedParams.timeRange,
       limit: validatedParams.limit,
-    });
+    }, 'Searching logs');
 
     // Apply smart phrase detection
     const enhancedQuery = smartPhraseDetection(validatedParams.query);
     const wasQuoted = enhancedQuery !== validatedParams.query && enhancedQuery.includes('"');
     
     if (wasQuoted) {
-      logger.info('Applied smart phrase detection', { originalQuery: validatedParams.query, enhancedQuery });
+      logger.info({ originalQuery: validatedParams.query, enhancedQuery }, 'Applied smart phrase detection');
     }
 
     // Determine time range
@@ -267,11 +267,11 @@ export async function searchLogs(
       ? response.hits.total 
       : (response.hits.total as any)?.value || 0;
     
-    logger.info('Search completed', {
+    logger.info({
       total,
       returned: logs.length,
       took: searchDuration,
-    });
+    }, 'Search completed');
 
     // Generate suggestions for query improvement
     const suggestions = generateQuerySuggestions(validatedParams.query, validatedParams);
@@ -300,7 +300,7 @@ ${suggestions.length > 0 ? suggestions.join('\n') + '\n' : ''}`;
     };
 
   } catch (error) {
-    logger.error('Search logs failed', error);
+    logger.error(error as Error, 'Search logs failed');
     
     if (error instanceof z.ZodError) {
       throw new ValidationError(
