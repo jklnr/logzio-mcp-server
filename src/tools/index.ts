@@ -6,19 +6,12 @@ import { getLogStats, logStatsTool, type LogStatsParams } from './stats.js';
 /**
  * All available MCP tools
  */
-export const TOOLS = [
-  searchLogsTool,
-  queryLogsTool,
-  logStatsTool,
-] as const;
+export const TOOLS = [searchLogsTool, queryLogsTool, logStatsTool] as const;
 
 /**
  * Tool parameter types
  */
-export type ToolParams = 
-  | SearchLogsParams
-  | QueryLogsParams 
-  | LogStatsParams;
+export type ToolParams = SearchLogsParams | QueryLogsParams | LogStatsParams;
 
 /**
  * Tool result type
@@ -39,9 +32,11 @@ export type ToolHandler = (
  * Tool registry mapping tool names to handlers
  */
 export const TOOL_HANDLERS: Record<string, ToolHandler> = {
-  search_logs: (client, params) => searchLogs(client, params as SearchLogsParams),
+  search_logs: (client, params) =>
+    searchLogs(client, params as SearchLogsParams),
   query_logs: (client, params) => queryLogs(client, params as QueryLogsParams),
-  get_log_stats: (client, params) => getLogStats(client, params as LogStatsParams),
+  get_log_stats: (client, params) =>
+    getLogStats(client, params as LogStatsParams),
 };
 
 /**
@@ -53,11 +48,11 @@ export async function executeTool(
   params: unknown
 ): Promise<ToolResult> {
   const handler = TOOL_HANDLERS[toolName];
-  
+
   if (!handler) {
     throw new Error(`Unknown tool: ${toolName}`);
   }
-  
+
   return handler(client, params);
 }
 
@@ -76,20 +71,8 @@ export function isValidTool(toolName: string): boolean {
 }
 
 // Re-export individual tools for convenience
-export {
-  searchLogs,
-  searchLogsTool,
-  type SearchLogsParams,
-} from './search.js';
+export { searchLogs, searchLogsTool, type SearchLogsParams } from './search.js';
 
-export {
-  queryLogs,
-  queryLogsTool,
-  type QueryLogsParams,
-} from './query.js';
+export { queryLogs, queryLogsTool, type QueryLogsParams } from './query.js';
 
-export {
-  getLogStats,
-  logStatsTool,
-  type LogStatsParams,
-} from './stats.js'; 
+export { getLogStats, logStatsTool, type LogStatsParams } from './stats.js';

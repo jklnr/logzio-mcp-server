@@ -16,7 +16,7 @@ export type TimeRange = z.infer<typeof TimeRangeSchema>;
  */
 export const LogSeveritySchema = z.enum([
   'trace',
-  'debug', 
+  'debug',
   'info',
   'warn',
   'error',
@@ -106,10 +106,13 @@ export interface LogStatsResponse {
     count: number;
     timestamp?: string;
   }>;
-  aggregations?: Record<string, {
-    value: number;
-    buckets?: Array<{ key: string; count: number }>;
-  }>;
+  aggregations?: Record<
+    string,
+    {
+      value: number;
+      buckets?: Array<{ key: string; count: number }>;
+    }
+  >;
 }
 
 /**
@@ -148,4 +151,4 @@ export const SortSchema = z.object({
   order: z.enum(['asc', 'desc']).default('desc'),
 });
 
-export type Sort = z.infer<typeof SortSchema>; 
+export type Sort = z.infer<typeof SortSchema>;

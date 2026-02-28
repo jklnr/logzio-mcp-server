@@ -60,12 +60,15 @@ async function main(): Promise<void> {
     const args = process.argv.slice(2);
     const config = parseConfig(args);
 
-    logger.info({
-      logzioUrl: config.logzioUrl,
-      timeout: config.timeout,
-      retryAttempts: config.retryAttempts,
-      maxResults: config.maxResults,
-    }, 'Starting MCP server for Logz.io');
+    logger.info(
+      {
+        logzioUrl: config.logzioUrl,
+        timeout: config.timeout,
+        retryAttempts: config.retryAttempts,
+        maxResults: config.maxResults,
+      },
+      'Starting MCP server for Logz.io'
+    );
 
     // Create and start the server
     const server = new LogzioMcpServer(config);
@@ -80,7 +83,6 @@ async function main(): Promise<void> {
 
     // Start the MCP server
     await server.start();
-
   } catch (error) {
     logger.error(error, 'Failed to start MCP server');
 
@@ -91,7 +93,9 @@ async function main(): Promise<void> {
     }
 
     // Log full error details for debugging
-    console.error(`\nFatal Error 1: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error(
+      `\nFatal Error 1: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
     if (error instanceof Error && error.stack) {
       console.error('Stack trace:', error.stack);
     }
@@ -123,4 +127,4 @@ process.on('uncaughtException', (error) => {
 main().catch((error) => {
   console.error('Startup failed:', error);
   process.exit(1);
-}); 
+});

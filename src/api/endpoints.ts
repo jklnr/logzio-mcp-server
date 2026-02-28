@@ -5,14 +5,14 @@ export const API_ENDPOINTS = {
   // Search API endpoints
   SEARCH: '/v1/search',
   LUCENE_SEARCH: '/v1/search',
-  
+
   // Statistics API endpoints
   STATS: '/v1/statistics',
   AGGREGATIONS: '/v1/aggregations',
-  
+
   // Account API endpoints
   ACCOUNT_INFO: '/v1/account',
-  
+
   // Health check
   HEALTH: '/v1/health',
 } as const;
@@ -26,7 +26,7 @@ export function buildUrl(
   params?: Record<string, unknown>
 ): string {
   const url = new URL(endpoint, baseUrl);
-  
+
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -34,7 +34,7 @@ export function buildUrl(
       }
     });
   }
-  
+
   return url.toString();
 }
 
@@ -51,7 +51,7 @@ export function buildSearchParams(query: {
   type?: string;
 }): Record<string, unknown> {
   const params: Record<string, unknown> = {};
-  
+
   if (query.q) params.q = query.q;
   if (query.from) params.from = query.from;
   if (query.to) params.to = query.to;
@@ -59,7 +59,7 @@ export function buildSearchParams(query: {
   if (query.sort) params.sort = query.sort;
   if (query.index) params.index = query.index;
   if (query.type) params.type = query.type;
-  
+
   return params;
 }
 
@@ -80,11 +80,11 @@ export function buildLuceneQuery(query: {
       },
     },
   };
-  
+
   if (query.size) {
     payload.size = query.size;
   }
-  
+
   if (query.from || query.to) {
     payload.query = {
       bool: {
@@ -106,25 +106,28 @@ export function buildLuceneQuery(query: {
       },
     };
   }
-  
+
   if (query.sort) {
     payload.sort = query.sort;
   } else {
     payload.sort = [{ '@timestamp': { order: 'desc' } }];
   }
-  
+
   return payload;
 }
 
 /**
  * Parse time range into from/to dates
  */
-export function parseTimeRange(timeRange?: string): { from?: string; to?: string } {
+export function parseTimeRange(timeRange?: string): {
+  from?: string;
+  to?: string;
+} {
   if (!timeRange) return {};
-  
+
   const now = new Date();
   const to = now.toISOString();
-  
+
   switch (timeRange) {
     case '1h':
       return {
@@ -164,4 +167,4 @@ export function parseTimeRange(timeRange?: string): { from?: string; to?: string
     default:
       return {};
   }
-} 
+}

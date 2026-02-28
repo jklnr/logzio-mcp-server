@@ -23,20 +23,26 @@ export class LogzioMcpServer {
 
   constructor(config: Config) {
     this.client = new LogzioApiClient(config);
-    this.server = new Server({
-      name: 'mcp-server-logzio',
-      version: '0.1.0',
-    }, {
-      capabilities: {
-        tools: {},
+    this.server = new Server(
+      {
+        name: 'mcp-server-logzio',
+        version: '0.1.0',
       },
-    });
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    );
 
     this.setupHandlers();
-    this.logger.info({
-      logzioUrl: config.logzioUrl,
-      toolCount: TOOLS.length,
-    }, 'MCP server initialized');
+    this.logger.info(
+      {
+        logzioUrl: config.logzioUrl,
+        toolCount: TOOLS.length,
+      },
+      'MCP server initialized'
+    );
   }
 
   /**
@@ -46,7 +52,7 @@ export class LogzioMcpServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       this.logger.debug('Listing available tools');
       return {
-        tools: TOOLS.map(tool => ({
+        tools: TOOLS.map((tool) => ({
           name: tool.name,
           description: tool.description,
           inputSchema: tool.inputSchema,
@@ -56,11 +62,14 @@ export class LogzioMcpServer {
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name: toolName, arguments: args } = request.params;
-      
-      this.logger.info({
-        toolName,
-        hasArgs: Boolean(args),
-      }, 'Tool call received');
+
+      this.logger.info(
+        {
+          toolName,
+          hasArgs: Boolean(args),
+        },
+        'Tool call received'
+      );
 
       if (!isValidTool(toolName)) {
         throw new McpError(
@@ -71,19 +80,26 @@ export class LogzioMcpServer {
 
       try {
         const result = await executeTool(toolName, this.client, args || {});
-        
-        this.logger.info({
-          toolName,
-          contentLength: result.content[0]?.text?.length || 0,
-        }, 'Tool call completed');
+
+        this.logger.info(
+          {
+            toolName,
+            contentLength: result.content[0]?.text?.length || 0,
+          },
+          'Tool call completed'
+        );
 
         return result;
       } catch (error) {
-        this.logger.error({
-          err: error,
-          toolName,
-          errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-        }, 'Tool call failed');
+        this.logger.error(
+          {
+            err: error,
+            toolName,
+            errorType:
+              error instanceof Error ? error.constructor.name : 'Unknown',
+          },
+          'Tool call failed'
+        );
 
         if (error instanceof ToolError) {
           throw new McpError(
@@ -116,9 +132,9 @@ export class LogzioMcpServer {
     // Connect to stdio transport
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    
+
     this.logger.info('MCP server started and ready for connections');
-    
+
     // Handle process signals for graceful shutdown
     process.on('SIGINT', () => this.shutdown('SIGINT'));
     process.on('SIGTERM', () => this.shutdown('SIGTERM'));
@@ -129,7 +145,7 @@ export class LogzioMcpServer {
    */
   private async shutdown(signal: string): Promise<void> {
     this.logger.info({ signal }, 'Shutting down MCP server');
-    
+
     try {
       await this.server.close();
       this.logger.info('MCP server shutdown complete');
@@ -151,4 +167,4 @@ export class LogzioMcpServer {
       throw error;
     }
   }
-} 
+}

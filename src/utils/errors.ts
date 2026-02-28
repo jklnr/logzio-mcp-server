@@ -5,7 +5,11 @@ export abstract class LogzioError extends Error {
   public readonly code: string;
   public readonly context?: Record<string, unknown>;
 
-  constructor(message: string, code: string, context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    code: string,
+    context?: Record<string, unknown>
+  ) {
     super(message);
     this.name = this.constructor.name;
     this.code = code;
@@ -167,7 +171,7 @@ export function isRetryableError(error: unknown): boolean {
       error instanceof RateLimitError
     );
   }
-  
+
   // Retry on network errors
   if (error instanceof Error) {
     return (
@@ -177,7 +181,7 @@ export function isRetryableError(error: unknown): boolean {
       error.message.includes('timeout')
     );
   }
-  
+
   return false;
 }
 
@@ -189,4 +193,4 @@ export function getRetryDelay(error: unknown): number | undefined {
     return error.retryAfter;
   }
   return undefined;
-} 
+}
