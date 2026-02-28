@@ -83,7 +83,7 @@ export interface LogEntry {
  */
 export interface SearchResponse {
   hits: {
-    total: number;
+    total: number | { value: number; relation?: string };
     hits: Array<{
       _id: string;
       _source: LogEntry;

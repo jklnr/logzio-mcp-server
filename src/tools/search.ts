@@ -3,6 +3,7 @@ import type { LogzioApiClient } from '../api/client.js';
 import { getLogger } from '../utils/logger.js';
 import { ToolError, ValidationError } from '../utils/errors.js';
 import { TimeRangeSchema, LogSeveritySchema } from '../api/types.js';
+import { formatLogEntry } from '../utils/logs.js';
 import { parseTimeRange } from '../api/endpoints.js';
 
 /**
@@ -67,130 +68,6 @@ export const SearchLogsParamsSchema = z.object({
 });
 
 export type SearchLogsParams = z.infer<typeof SearchLogsParamsSchema>;
-
-/**
- * Extract key information from log entry for summary
- */
-function extractLogSummary(log: any): {
-  timestamp: string;
-  level: string;
-  message: string;
-  source: string;
-  key_metadata: Record<string, any>;
-} {
-  const timestamp = log['@timestamp'] || log.timestamp || 'N/A';
-  const level = log.level || log.severity || 'INFO';
-  const message = log.message || log.msg || '';
-
-  // Smart source detection
-  const source =
-    log.k8s_pod_name ||
-    log.container_name ||
-    log.host ||
-    log.source ||
-    log.service ||
-    '';
-
-  // Extract key metadata (excluding noise)
-  const excludeFields = [
-    '@timestamp',
-    'timestamp',
-    'level',
-    'severity',
-    'message',
-    'msg',
-    'time',
-    'log',
-    'stream',
-    '_id',
-    '_index',
-    '_type',
-    '_score',
-  ];
-
-  const key_metadata: Record<string, any> = {};
-  const importantFields = [
-    'k8s_namespace_name',
-    'k8s_pod_name',
-    'container_name',
-    'env_id',
-    'status_code',
-    'method',
-    'path',
-    'duration',
-    'error_type',
-    'user_id',
-  ];
-
-  // Add important fields first
-  importantFields.forEach((field) => {
-    if (log[field] !== undefined && log[field] !== null && log[field] !== '') {
-      key_metadata[field] = log[field];
-    }
-  });
-
-  // Add other non-excluded fields (limit to prevent overwhelming output)
-  let otherFieldCount = 0;
-  Object.keys(log).forEach((key) => {
-    if (
-      !excludeFields.includes(key) &&
-      !importantFields.includes(key) &&
-      otherFieldCount < 5 &&
-      log[key] !== undefined &&
-      log[key] !== null &&
-      log[key] !== ''
-    ) {
-      key_metadata[key] = log[key];
-      otherFieldCount++;
-    }
-  });
-
-  return { timestamp, level, message, source, key_metadata };
-}
-
-/**
- * Format log entry for display with improved readability
- */
-function formatLogEntry(log: any, index: number): string {
-  const summary = extractLogSummary(log);
-
-  // Format timestamp nicely
-  const timeStr =
-    summary.timestamp !== 'N/A'
-      ? new Date(summary.timestamp)
-          .toISOString()
-          .replace('T', ' ')
-          .replace('Z', ' UTC')
-      : 'N/A';
-
-  // Truncate very long messages (increased from 200 to 1000 for better log analysis)
-  const message =
-    summary.message.length > 1000
-      ? summary.message.substring(0, 1000) + '...'
-      : summary.message;
-
-  let formatted = `${index + 1}. [${timeStr}] ${(summary.level || 'INFO').toString().toUpperCase()}`;
-
-  if (summary.source) {
-    formatted += ` (${summary.source})`;
-  }
-
-  formatted += `\n   📝 ${message || 'No message'}`;
-
-  // Add key metadata if present
-  if (Object.keys(summary.key_metadata).length > 0) {
-    formatted += '\n   🏷️  Metadata:';
-    Object.entries(summary.key_metadata).forEach(([key, value]) => {
-      const displayValue =
-        typeof value === 'string' && value.length > 50
-          ? value.substring(0, 50) + '...'
-          : value;
-      formatted += `\n      • ${key}: ${displayValue}`;
-    });
-  }
-
-  return formatted;
-}
 
 /**
  * Detect if a query should be treated as an exact phrase and format it accordingly

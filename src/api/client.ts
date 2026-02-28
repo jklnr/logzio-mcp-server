@@ -8,7 +8,7 @@ import {
   isRetryableError,
   getRetryDelay,
 } from '../utils/errors.js';
-import type { SearchResponse, LogStatsResponse, ApiResponse } from './types.js';
+import type { SearchResponse, LogStatsResponse } from './types.js';
 
 /**
  * Logz.io API client with retry logic and error handling
@@ -100,12 +100,13 @@ export class LogzioApiClient {
               '  - app-eu.logz.io → use "region eu"\n' +
               '  - app-ca.logz.io → use "region ca"'
           );
-        case 429:
+        case 429: {
           const retryAfter = this.parseRetryAfter(error.response.headers);
           throw new RateLimitError('Rate limit exceeded', retryAfter, {
             status,
             data,
           });
+        }
         default:
           throw ApiError.fromResponse({ status, data });
       }
@@ -189,8 +190,24 @@ export class LogzioApiClient {
     size?: number;
     sort?: string;
   }): Promise<SearchResponse> {
+    const queryBody = this.buildSearchQuery(params);
+
+    return this.makeRequest<SearchResponse>({
+      method: 'POST',
+      url: '/v1/search',
+      data: queryBody,
+    });
+  }
+
+  private buildSearchQuery(params: {
+    query: string;
+    from?: string;
+    to?: string;
+    size?: number;
+    sort?: string;
+  }): Record<string, unknown> {
     // Build Elasticsearch query body for Logz.io API
-    const queryBody: any = {
+    const queryBody: Record<string, any> = {
       query: {
         query_string: {
           query: params.query,
@@ -227,11 +244,7 @@ export class LogzioApiClient {
       queryBody.sort = [{ '@timestamp': { order: 'desc' } }];
     }
 
-    return this.makeRequest<SearchResponse>({
-      method: 'POST',
-      url: '/v1/search',
-      data: queryBody,
-    });
+    return queryBody;
   }
 
   /**
@@ -255,8 +268,63 @@ export class LogzioApiClient {
     to?: string;
     groupBy?: string[];
   }): Promise<LogStatsResponse> {
+    const queryBody = this.buildStatsQuery(params);
+
+    const response = await this.makeRequest<SearchResponse>({
+      method: 'POST',
+      url: '/v1/search',
+      data: queryBody,
+    });
+
+    // Transform the response to match LogStatsResponse format
+    const totalRaw = response.hits?.total;
+    const total =
+      typeof totalRaw === 'number'
+        ? totalRaw
+        : typeof totalRaw === 'object' && totalRaw !== null
+          ? (totalRaw as { value?: number }).value || 0
+          : 0;
+
+    return {
+      total,
+      timeRange: {
+        from: params.from,
+        to: params.to,
+      },
+      took: response.took || 0,
+      aggregations: response.aggregations || {},
+      buckets:
+        (
+          (response.aggregations as Record<string, unknown>)
+            ?.time_histogram as Record<string, unknown>
+        )?.buckets &&
+        Array.isArray(
+          (
+            (response.aggregations as Record<string, unknown>)
+              ?.time_histogram as Record<string, unknown>
+          )?.buckets
+        )
+          ? (
+              (
+                (response.aggregations as Record<string, unknown>)
+                  ?.time_histogram as Record<string, unknown>
+              )?.buckets as any[]
+            ).map((bucket: Record<string, unknown>) => ({
+              key: bucket.key_as_string || bucket.key,
+              count: bucket.doc_count,
+              timestamp: bucket.key_as_string,
+            }))
+          : [],
+    } as LogStatsResponse;
+  }
+
+  private buildStatsQuery(params: {
+    from?: string;
+    to?: string;
+    groupBy?: string[];
+  }): Record<string, unknown> {
     // Build aggregation query to get statistics
-    const queryBody: any = {
+    const queryBody: Record<string, any> = {
       query: {
         match_all: {},
       },
@@ -310,35 +378,7 @@ export class LogzioApiClient {
       },
     };
 
-    const response = await this.makeRequest<SearchResponse>({
-      method: 'POST',
-      url: '/v1/search',
-      data: queryBody,
-    });
-
-    // Transform the response to match LogStatsResponse format
-    const total =
-      typeof response.hits?.total === 'number'
-        ? response.hits.total
-        : (response.hits?.total as any)?.value || 0;
-
-    return {
-      total,
-      timeRange: {
-        from: params.from,
-        to: params.to,
-      },
-      took: response.took || 0,
-      aggregations: response.aggregations || {},
-      buckets:
-        (response.aggregations as any)?.time_histogram?.buckets?.map(
-          (bucket: any) => ({
-            key: bucket.key_as_string || bucket.key,
-            count: bucket.doc_count,
-            timestamp: bucket.key_as_string,
-          })
-        ) || [],
-    } as LogStatsResponse;
+    return queryBody;
   }
 
   /**

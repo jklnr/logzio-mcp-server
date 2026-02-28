@@ -12,7 +12,7 @@ describe('searchLogs tool integration', () => {
     const client = createMockApiClient();
     client.searchLogs.mockResolvedValue(defaultSearchResponse);
 
-    const result = await searchLogs(client as any, {
+    const result = await searchLogs(client as unknown as LogzioApiClient, {
       query: 'database connection timeout',
       limit: 50,
       sort: 'desc',
@@ -34,7 +34,7 @@ describe('searchLogs tool integration', () => {
     const client = createMockApiClient();
     client.searchLogs.mockResolvedValue(defaultSearchResponse);
 
-    await searchLogs(client as any, {
+    await searchLogs(client as unknown as LogzioApiClient, {
       query: 'level:error AND service:api',
       from: '2026-02-01T10:00:00.000Z',
       to: '2026-02-01T12:00:00.000Z',
@@ -56,7 +56,7 @@ describe('searchLogs tool integration', () => {
     const client = createMockApiClient();
     client.searchLogs.mockResolvedValue({} as any);
 
-    const result = await searchLogs(client as any, {
+    const result = await searchLogs(client as unknown as LogzioApiClient, {
       query: 'this-will-not-match',
       limit: 50,
       sort: 'desc',
@@ -72,7 +72,7 @@ describe('searchLogs tool integration', () => {
     const client = createMockApiClient();
 
     await expect(
-      searchLogs(client as any, {
+      searchLogs(client as unknown as LogzioApiClient, {
         query: '',
         limit: 50,
         sort: 'desc',

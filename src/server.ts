@@ -60,69 +60,74 @@ export class LogzioMcpServer {
       };
     });
 
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      const { name: toolName, arguments: args } = request.params;
+    this.server.setRequestHandler(
+      CallToolRequestSchema,
+      this.handleToolCall.bind(this)
+    );
+  }
+
+  /**
+   * Handle incoming tool calls
+   */
+  private async handleToolCall(request: any): Promise<any> {
+    const { name: toolName, arguments: args } = request.params;
+
+    this.logger.info(
+      {
+        toolName,
+        hasArgs: Boolean(args),
+      },
+      'Tool call received'
+    );
+
+    if (!isValidTool(toolName)) {
+      throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${toolName}`);
+    }
+
+    try {
+      const result = await executeTool(toolName, this.client, args || {});
 
       this.logger.info(
         {
           toolName,
-          hasArgs: Boolean(args),
+          contentLength: result.content[0]?.text?.length || 0,
         },
-        'Tool call received'
+        'Tool call completed'
       );
 
-      if (!isValidTool(toolName)) {
-        throw new McpError(
-          ErrorCode.MethodNotFound,
-          `Unknown tool: ${toolName}`
-        );
-      }
+      return result;
+    } catch (error) {
+      this.logger.error(
+        {
+          err: error,
+          toolName,
+          errorType:
+            error instanceof Error ? error.constructor.name : 'Unknown',
+        },
+        'Tool call failed'
+      );
 
-      try {
-        const result = await executeTool(toolName, this.client, args || {});
-
-        this.logger.info(
-          {
-            toolName,
-            contentLength: result.content[0]?.text?.length || 0,
-          },
-          'Tool call completed'
-        );
-
-        return result;
-      } catch (error) {
-        this.logger.error(
-          {
-            err: error,
-            toolName,
-            errorType:
-              error instanceof Error ? error.constructor.name : 'Unknown',
-          },
-          'Tool call failed'
-        );
-
-        if (error instanceof ToolError) {
-          throw new McpError(
-            ErrorCode.InternalError,
-            `Tool execution failed: ${error.message}`,
-            error.context
-          );
-        }
-
-        if (error instanceof ConfigurationError) {
-          throw new McpError(
-            ErrorCode.InvalidParams,
-            `Configuration error: ${error.message}`,
-            error.context
-          );
-        }
-
+      if (error instanceof ToolError) {
         throw new McpError(
           ErrorCode.InternalError,
-          `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
+          `Tool execution failed: ${error.message}`,
+          error.context
         );
       }
-    });
+
+      if (error instanceof ConfigurationError) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          `Configuration error: ${error.message}`,
+          error.context
+        );
+      }
+
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 
   /**

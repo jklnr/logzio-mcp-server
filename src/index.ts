@@ -43,6 +43,37 @@ TOOLS PROVIDED:
 `);
 }
 
+function handleStartupError(
+  error: unknown,
+  logger: ReturnType<typeof getLogger>
+): never {
+  logger.error(error, 'Failed to start MCP server');
+
+  if (error instanceof ConfigurationError) {
+    // eslint-disable-next-line no-console
+    console.error(`\nConfiguration Error: ${error.message}\n`);
+    showUsage();
+    process.exit(1);
+  }
+
+  // Log full error details for debugging
+  // eslint-disable-next-line no-console
+  console.error(
+    `\nFatal Error 1: ${error instanceof Error ? error.message : 'Unknown error'}`
+  );
+  if (error instanceof Error && error.stack) {
+    // eslint-disable-next-line no-console
+    console.error('Stack trace:', error.stack);
+  }
+  if (error && typeof error === 'object') {
+    // eslint-disable-next-line no-console
+    console.error('Error details:', JSON.stringify(error, null, 2));
+  }
+  // eslint-disable-next-line no-console
+  console.error('');
+  process.exit(1);
+}
+
 /**
  * Main entry point
  */
@@ -84,26 +115,7 @@ async function main(): Promise<void> {
     // Start the MCP server
     await server.start();
   } catch (error) {
-    logger.error(error, 'Failed to start MCP server');
-
-    if (error instanceof ConfigurationError) {
-      console.error(`\nConfiguration Error: ${error.message}\n`);
-      showUsage();
-      process.exit(1);
-    }
-
-    // Log full error details for debugging
-    console.error(
-      `\nFatal Error 1: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-    if (error instanceof Error && error.stack) {
-      console.error('Stack trace:', error.stack);
-    }
-    if (error && typeof error === 'object') {
-      console.error('Error details:', JSON.stringify(error, null, 2));
-    }
-    console.error('');
-    process.exit(1);
+    handleStartupError(error, logger);
   }
 }
 

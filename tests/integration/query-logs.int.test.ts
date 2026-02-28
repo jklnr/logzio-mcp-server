@@ -9,7 +9,7 @@ describe('queryLogs tool integration', () => {
     const client = createMockApiClient();
     client.queryLogs.mockResolvedValue(defaultSearchResponse);
 
-    await queryLogs(client as any, {
+    await queryLogs(client as unknown as LogzioApiClient, {
       luceneQuery: 'service:api',
       from: '2026-02-01T10:00:00.000Z',
       to: '2026-02-01T12:00:00.000Z',
@@ -46,7 +46,7 @@ describe('queryLogs tool integration', () => {
     const client = createMockApiClient();
     client.queryLogs.mockResolvedValue(defaultSearchResponse);
 
-    const result = await queryLogs(client as any, {
+    const result = await queryLogs(client as unknown as LogzioApiClient, {
       luceneQuery: 'level:error',
       size: 100,
       sort: 'desc',
@@ -64,7 +64,7 @@ describe('queryLogs tool integration', () => {
     );
 
     await expect(
-      queryLogs(client as any, {
+      queryLogs(client as unknown as LogzioApiClient, {
         luceneQuery: 'level:ERROR AND (',
         size: 100,
         sort: 'desc',
@@ -78,7 +78,7 @@ describe('queryLogs tool integration', () => {
     const client = createMockApiClient();
 
     await expect(
-      queryLogs(client as any, {
+      queryLogs(client as unknown as LogzioApiClient, {
         luceneQuery: '',
         size: 100,
         sort: 'desc',

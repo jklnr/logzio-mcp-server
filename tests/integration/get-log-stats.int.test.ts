@@ -11,7 +11,7 @@ describe('getLogStats tool integration', () => {
     const client = createMockApiClient();
     client.getLogStats.mockResolvedValue(defaultStatsResponse);
 
-    const result = await getLogStats(client as any, {});
+    const result = await getLogStats(client as unknown as LogzioApiClient, {});
 
     expect(client.getLogStats).toHaveBeenCalledWith({
       from: '2026-01-31T12:00:00.000Z',
@@ -25,7 +25,7 @@ describe('getLogStats tool integration', () => {
     const client = createMockApiClient();
     client.getLogStats.mockResolvedValue(defaultStatsResponse);
 
-    const result = await getLogStats(client as any, {
+    const result = await getLogStats(client as unknown as LogzioApiClient, {
       from: '2026-02-01T08:00:00.000Z',
       to: '2026-02-01T12:00:00.000Z',
       groupBy: ['service', 'k8s_namespace_name'],
@@ -49,7 +49,7 @@ describe('getLogStats tool integration', () => {
       aggregations: {},
     } as any);
 
-    const result = await getLogStats(client as any, {
+    const result = await getLogStats(client as unknown as LogzioApiClient, {
       timeRange: '1h',
     });
 
@@ -75,7 +75,7 @@ describe('getLogStats tool integration', () => {
       },
     } as any);
 
-    const result = await getLogStats(client as any, {
+    const result = await getLogStats(client as unknown as LogzioApiClient, {
       timeRange: '24h',
     });
 

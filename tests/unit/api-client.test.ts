@@ -22,8 +22,8 @@ describe('LogzioApiClient retry behavior', () => {
   it('retries network errors with exponential backoff and then succeeds', async () => {
     const client = new LogzioApiClient(baseConfig);
     const sleepSpy = vi
-      .spyOn(client as any, 'sleep')
-      .mockResolvedValue(undefined);
+      .spyOn(client as unknown as { sleep: unknown }, 'sleep' as never)
+      .mockResolvedValue(undefined as never);
 
     const axiosMock = vi
       .fn()
@@ -31,7 +31,7 @@ describe('LogzioApiClient retry behavior', () => {
       .mockRejectedValueOnce(new Error('ECONNRESET by peer'))
       .mockResolvedValueOnce({ data: defaultSearchResponse });
 
-    (client as any).axios = axiosMock;
+    (client as unknown as { axios: unknown }).axios = axiosMock;
 
     const result = await client.searchLogs({ query: 'error' });
 
@@ -47,15 +47,15 @@ describe('LogzioApiClient retry behavior', () => {
       retryAttempts: 1,
     });
     const sleepSpy = vi
-      .spyOn(client as any, 'sleep')
-      .mockResolvedValue(undefined);
+      .spyOn(client as unknown as { sleep: unknown }, 'sleep' as never)
+      .mockResolvedValue(undefined as never);
 
     const axiosMock = vi
       .fn()
       .mockRejectedValueOnce(new RateLimitError('Rate limit exceeded', 2500))
       .mockResolvedValueOnce({ data: defaultSearchResponse });
 
-    (client as any).axios = axiosMock;
+    (client as unknown as { axios: unknown }).axios = axiosMock;
 
     await client.searchLogs({ query: 'error' });
 
@@ -67,9 +67,9 @@ describe('LogzioApiClient retry behavior', () => {
 describe('LogzioApiClient error mapping', () => {
   it('maps 401 axios response errors to AuthenticationError', () => {
     const client = new LogzioApiClient(baseConfig);
-    const handleResponseError = (client as any).handleResponseError.bind(
-      client
-    );
+    const handleResponseError = (
+      client as unknown as { handleResponseError: (err: unknown) => void }
+    ).handleResponseError.bind(client);
     const error = {
       isAxiosError: true,
       response: {
@@ -83,9 +83,9 @@ describe('LogzioApiClient error mapping', () => {
 
   it('maps 429 axios response errors to RateLimitError with retryAfter', () => {
     const client = new LogzioApiClient(baseConfig);
-    const handleResponseError = (client as any).handleResponseError.bind(
-      client
-    );
+    const handleResponseError = (
+      client as unknown as { handleResponseError: (err: unknown) => void }
+    ).handleResponseError.bind(client);
     const error = {
       isAxiosError: true,
       response: {
@@ -108,9 +108,9 @@ describe('LogzioApiClient error mapping', () => {
 
   it('maps non-auth non-rate-limit HTTP errors to ApiError', () => {
     const client = new LogzioApiClient(baseConfig);
-    const handleResponseError = (client as any).handleResponseError.bind(
-      client
-    );
+    const handleResponseError = (
+      client as unknown as { handleResponseError: (err: unknown) => void }
+    ).handleResponseError.bind(client);
     const error = {
       isAxiosError: true,
       response: {
@@ -156,7 +156,7 @@ describe('LogzioApiClient getLogStats transformation', () => {
       },
     });
 
-    (client as any).axios = axiosMock;
+    (client as unknown as { axios: unknown }).axios = axiosMock;
 
     const result = await client.getLogStats({
       from: '2026-01-01T11:00:00.000Z',
@@ -172,7 +172,7 @@ describe('LogzioApiClient getLogStats transformation', () => {
     expect(requestPayload?.aggs?.by_level).toBeDefined();
     expect(requestPayload?.aggs?.by_service).toBeDefined();
     expect(result.total).toBe(7);
-    expect((result as any).took).toBe(9);
+    expect((result as unknown as { took: number }).took).toBe(9);
     expect(result.buckets).toEqual([
       {
         key: '2026-01-01T12:00:00.000Z',

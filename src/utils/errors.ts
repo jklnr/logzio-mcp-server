@@ -133,7 +133,7 @@ export class ToolError extends LogzioError {
 /**
  * Generate appropriate error message based on API response
  */
-function getApiErrorMessage(statusCode: number, data?: unknown): string {
+function getApiErrorMessage(statusCode: number, _data?: unknown): string {
   switch (statusCode) {
     case 400:
       return 'Bad request: Please check your query parameters and format';

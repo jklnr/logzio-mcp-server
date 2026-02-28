@@ -23,7 +23,7 @@ describe('tool registry integration', () => {
   it('throws for unknown tool execution requests', async () => {
     const client = createMockApiClient();
     await expect(
-      executeTool('unknown_tool', client as any, {})
+      executeTool('unknown_tool', client as unknown as LogzioApiClient, {})
     ).rejects.toThrow('Unknown tool: unknown_tool');
   });
 
@@ -46,7 +46,7 @@ describe('tool registry integration', () => {
     TOOL_HANDLERS.search_logs = mockedHandler;
 
     try {
-      const result = await executeTool('search_logs', client as any, {
+      const result = await executeTool('search_logs', client as unknown as LogzioApiClient, {
         query: 'error',
       });
 

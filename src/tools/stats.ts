@@ -42,7 +42,15 @@ export type LogStatsParams = z.infer<typeof LogStatsParamsSchema>;
 /**
  * Format time buckets for display
  */
-function formatTimeBuckets(buckets: any[], timeRange: string): string {
+function formatTimeBuckets(
+  buckets: Array<{
+    timestamp?: string;
+    key?: string;
+    count?: number;
+    doc_count?: number;
+  }>,
+  _timeRange: string
+): string {
   if (!buckets || buckets.length === 0) {
     return '📊 No time distribution data available\n';
   }
