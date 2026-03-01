@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { LogzioApiClient } from '../../src/api/client.js';
 import {
   TOOL_HANDLERS,
   executeTool,

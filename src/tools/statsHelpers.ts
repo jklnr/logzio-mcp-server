@@ -77,12 +77,13 @@ function getErrorRateSuggestion(response: {
     (b) => (b.key ?? '').toLowerCase() === 'error'
   );
   const totalLogs = levelBuckets.reduce(
-    (sum, b) => sum + (b.doc_count ?? 0),
+    (sum, b) => sum + (b.doc_count ?? b.count ?? 0),
     0
   );
 
   if (!errorBucket || totalLogs === 0) return null;
-  const pct = Math.round((errorBucket.doc_count! / totalLogs) * 100);
+  const errorCount = errorBucket.doc_count ?? errorBucket.count ?? 0;
+  const pct = Math.round((errorCount / totalLogs) * 100);
   if (pct <= 10) return null;
   return `⚠️  High error rate detected: ${pct}% of logs are errors`;
 }

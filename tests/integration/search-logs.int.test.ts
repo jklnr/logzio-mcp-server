@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { LogzioApiClient } from '../../src/api/client.js';
 import type { SearchResponse } from '../../src/api/types.js';
 import { searchLogs } from '../../src/tools/search.js';
 import { ValidationError } from '../../src/utils/errors.js';

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { LogzioApiClient } from '../../src/api/client.js';
 import type { LogStatsResponse } from '../../src/api/types.js';
 import { getLogStats } from '../../src/tools/stats.js';
 import { defaultStatsResponse } from '../fixtures/statsResponse.js';
@@ -68,9 +69,10 @@ describe('getLogStats tool integration', () => {
       buckets: [],
       aggregations: {
         by_level: {
+          value: 0,
           buckets: [
-            { key: 'error', doc_count: 35 },
-            { key: 'info', doc_count: 65 },
+            { key: 'error', count: 35 },
+            { key: 'info', count: 65 },
           ],
         },
       },
