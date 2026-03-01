@@ -4,7 +4,7 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D24.14.0-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 
-An *unofficial* [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that enables AI assistants like Claude to interact with [Logz.io](https://logz.io/)'s log management platform. Includes tools for simple log search, Lucene query search, and fetching basic statistics from logz io.
+An *unofficial* [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that enables AI assistants like Claude to interact with [Logz.io](https://logz.io/)'s log management platform. Includes tools for simple log search, Lucene query search, and fetching basic statistics from Logz.io.
 
 ## 🚀 Quick Start
 
