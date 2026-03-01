@@ -9,6 +9,12 @@ import {
   getRetryDelay,
 } from '../utils/errors.js';
 import type { SearchResponse, LogStatsResponse } from './types.js';
+import {
+  buildSearchQuery,
+  buildStatsQuery,
+  getTimeInterval,
+  transformToLogStatsResponse,
+} from './queryBuilders.js';
 
 /**
  * Logz.io API client with retry logic and error handling
@@ -23,9 +29,6 @@ export class LogzioApiClient {
     this.axios = this.createAxiosInstance();
   }
 
-  /**
-   * Create configured axios instance
-   */
   private createAxiosInstance(): AxiosInstance {
     const instance = axios.create({
       baseURL: this.config.logzioUrl || 'https://api.logz.io',
@@ -38,14 +41,10 @@ export class LogzioApiClient {
       },
     });
 
-    // Request interceptor for logging
     instance.interceptors.request.use(
       (config) => {
         this.logger.debug(
-          {
-            method: config.method,
-            url: config.url,
-          },
+          { method: config.method, url: config.url },
           'Making API request'
         );
         return config;
@@ -56,70 +55,54 @@ export class LogzioApiClient {
       }
     );
 
-    // Response interceptor for logging and error handling
     instance.interceptors.response.use(
       (response) => {
         this.logger.debug(
-          {
-            status: response.status,
-            url: response.config.url,
-          },
+          { status: response.status, url: response.config.url },
           'Received API response'
         );
         return response;
       },
-      (error) => {
-        return this.handleResponseError(error);
-      }
+      (error) => this.handleResponseError(error)
     );
 
     return instance;
   }
 
-  /**
-   * Handle response errors and convert to custom error types
-   */
   private handleResponseError(error: unknown): Promise<never> {
     if (axios.isAxiosError(error) && error.response) {
       const { status, data } = error.response;
-
-      switch (status) {
-        case 401:
-          throw new AuthenticationError(
-            'Authentication failed. This could be due to:\n' +
-              '• Invalid or expired API key\n' +
-              '• Wrong region - we default to US region (api.logz.io)\n' +
-              "• If you're not in the US region, specify your region:\n" +
-              '  - EU: add "region eu" to your command\n' +
-              '  - CA: add "region ca" to your command\n' +
-              '  - AU: add "region au" to your command\n' +
-              '  - UK: add "region uk" to your command\n' +
-              '  - US-West: add "region us-west" to your command\n' +
-              '• Check your Logz.io account URL to determine your region:\n' +
-              '  - app.logz.io → use "region us"\n' +
-              '  - app-eu.logz.io → use "region eu"\n' +
-              '  - app-ca.logz.io → use "region ca"'
-          );
-        case 429: {
-          const retryAfter = this.parseRetryAfter(error.response.headers);
-          throw new RateLimitError('Rate limit exceeded', retryAfter, {
-            status,
-            data,
-          });
-        }
-        default:
-          throw ApiError.fromResponse({ status, data });
+      if (status === 401) {
+        throw new AuthenticationError(
+          'Authentication failed. This could be due to:\n' +
+            '• Invalid or expired API key\n' +
+            '• Wrong region - we default to US region (api.logz.io)\n' +
+            "• If you're not in the US region, specify your region:\n" +
+            '  - EU: add "region eu" to your command\n' +
+            '  - CA: add "region ca" to your command\n' +
+            '  - AU: add "region au" to your command\n' +
+            '  - UK: add "region uk" to your command\n' +
+            '  - US-West: add "region us-west" to your command\n' +
+            '• Check your Logz.io account URL to determine your region:\n' +
+            '  - app.logz.io → use "region us"\n' +
+            '  - app-eu.logz.io → use "region eu"\n' +
+            '  - app-ca.logz.io → use "region ca"'
+        );
       }
+      if (status === 429) {
+        const retryAfter = this.parseRetryAfter(error.response.headers);
+        throw new RateLimitError('Rate limit exceeded', retryAfter, {
+          status,
+          data,
+        });
+      }
+      throw ApiError.fromResponse({ status, data });
     }
-
     throw new ApiError(
       error instanceof Error ? error.message : 'Unknown API error'
     );
   }
 
-  /**
-   * Parse retry-after header
-   */
   private parseRetryAfter(
     headers: Record<string, unknown>
   ): number | undefined {
@@ -131,9 +114,6 @@ export class LogzioApiClient {
     return undefined;
   }
 
-  /**
-   * Make HTTP request with retry logic
-   */
   private async makeRequest<T>(
     config: AxiosRequestConfig,
     attempt: number = 1
@@ -145,7 +125,6 @@ export class LogzioApiClient {
       if (attempt <= this.config.retryAttempts && isRetryableError(error)) {
         const delay =
           getRetryDelay(error) || this.calculateBackoffDelay(attempt);
-
         this.logger.warn(
           {
             attempt,
@@ -154,35 +133,21 @@ export class LogzioApiClient {
           },
           `Request failed, retrying in ${delay}ms`
         );
-
         await this.sleep(delay);
         return this.makeRequest<T>(config, attempt + 1);
       }
-
       throw error;
     }
   }
 
-  /**
-   * Calculate exponential backoff delay
-   */
   private calculateBackoffDelay(attempt: number): number {
-    return Math.min(
-      this.config.retryDelay * Math.pow(2, attempt - 1),
-      30000 // Max 30 seconds
-    );
+    return Math.min(this.config.retryDelay * Math.pow(2, attempt - 1), 30000);
   }
 
-  /**
-   * Sleep for specified milliseconds
-   */
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  /**
-   * Search logs using simple query
-   */
   public async searchLogs(params: {
     query: string;
     from?: string;
@@ -190,66 +155,13 @@ export class LogzioApiClient {
     size?: number;
     sort?: string;
   }): Promise<SearchResponse> {
-    const queryBody = this.buildSearchQuery(params);
-
     return this.makeRequest<SearchResponse>({
       method: 'POST',
       url: '/v1/search',
-      data: queryBody,
+      data: buildSearchQuery(params),
     });
   }
 
-  private buildSearchQuery(params: {
-    query: string;
-    from?: string;
-    to?: string;
-    size?: number;
-    sort?: string;
-  }): Record<string, unknown> {
-    // Build Elasticsearch query body for Logz.io API
-    const queryBody: Record<string, any> = {
-      query: {
-        query_string: {
-          query: params.query,
-        },
-      },
-      size: params.size || 50,
-    };
-
-    // Add time range filter if specified
-    if (params.from || params.to) {
-      queryBody.query = {
-        bool: {
-          must: [queryBody.query],
-          filter: {
-            range: {
-              '@timestamp': {
-                ...(params.from && { gte: params.from }),
-                ...(params.to && { lte: params.to }),
-              },
-            },
-          },
-        },
-      };
-    }
-
-    // Add sorting
-    if (params.sort) {
-      if (params.sort.includes('desc')) {
-        queryBody.sort = [{ '@timestamp': { order: 'desc' } }];
-      } else {
-        queryBody.sort = [{ '@timestamp': { order: 'asc' } }];
-      }
-    } else {
-      queryBody.sort = [{ '@timestamp': { order: 'desc' } }];
-    }
-
-    return queryBody;
-  }
-
-  /**
-   * Execute Lucene query
-   */
   public async queryLogs(
     payload: Record<string, unknown>
   ): Promise<SearchResponse> {
@@ -260,162 +172,31 @@ export class LogzioApiClient {
     });
   }
 
-  /**
-   * Get log statistics using search aggregations
-   */
   public async getLogStats(params: {
     from?: string;
     to?: string;
     groupBy?: string[];
   }): Promise<LogStatsResponse> {
-    const queryBody = this.buildStatsQuery(params);
-
+    const queryBody = buildStatsQuery(params, getTimeInterval);
     const response = await this.makeRequest<SearchResponse>({
       method: 'POST',
       url: '/v1/search',
       data: queryBody,
     });
-
-    // Transform the response to match LogStatsResponse format
-    const totalRaw = response.hits?.total;
-    const total =
-      typeof totalRaw === 'number'
-        ? totalRaw
-        : typeof totalRaw === 'object' && totalRaw !== null
-          ? (totalRaw as { value?: number }).value || 0
-          : 0;
-
-    return {
-      total,
-      timeRange: {
-        from: params.from,
-        to: params.to,
-      },
-      took: response.took || 0,
-      aggregations: response.aggregations || {},
-      buckets:
-        (
-          (response.aggregations as Record<string, unknown>)
-            ?.time_histogram as Record<string, unknown>
-        )?.buckets &&
-        Array.isArray(
-          (
-            (response.aggregations as Record<string, unknown>)
-              ?.time_histogram as Record<string, unknown>
-          )?.buckets
-        )
-          ? (
-              (
-                (response.aggregations as Record<string, unknown>)
-                  ?.time_histogram as Record<string, unknown>
-              )?.buckets as any[]
-            ).map((bucket: Record<string, unknown>) => ({
-              key: bucket.key_as_string || bucket.key,
-              count: bucket.doc_count,
-              timestamp: bucket.key_as_string,
-            }))
-          : [],
-    } as LogStatsResponse;
+    return transformToLogStatsResponse(response, params);
   }
 
-  private buildStatsQuery(params: {
-    from?: string;
-    to?: string;
-    groupBy?: string[];
-  }): Record<string, unknown> {
-    // Build aggregation query to get statistics
-    const queryBody: Record<string, any> = {
-      query: {
-        match_all: {},
-      },
-      size: 0, // We only want aggregations, not individual logs
-      aggs: {
-        time_histogram: {
-          date_histogram: {
-            field: '@timestamp',
-            interval: this.getTimeInterval(params.from, params.to),
-            order: { _key: 'desc' },
-          },
-        },
-      },
-    };
-
-    // Add time range filter if specified
-    if (params.from || params.to) {
-      queryBody.query = {
-        bool: {
-          filter: {
-            range: {
-              '@timestamp': {
-                ...(params.from && { gte: params.from }),
-                ...(params.to && { lte: params.to }),
-              },
-            },
-          },
-        },
-      };
-    }
-
-    // Add groupBy aggregations if specified
-    if (params.groupBy && params.groupBy.length > 0) {
-      params.groupBy.forEach((field) => {
-        queryBody.aggs[`by_${field}`] = {
-          terms: {
-            field: `${field}.keyword`,
-            size: 20,
-            order: { _count: 'desc' },
-          },
-        };
-      });
-    }
-
-    // Add common useful aggregations
-    queryBody.aggs.by_level = {
-      terms: {
-        field: 'level.keyword',
-        size: 10,
-        order: { _count: 'desc' },
-      },
-    };
-
-    return queryBody;
-  }
-
-  /**
-   * Calculate appropriate time interval for histograms
-   */
-  private getTimeInterval(from?: string, to?: string): string {
-    if (!from || !to) return '1h';
-
-    const start = new Date(from);
-    const end = new Date(to);
-    const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-
-    if (diffHours <= 6) return '30m';
-    if (diffHours <= 24) return '1h';
-    if (diffHours <= 72) return '3h';
-    if (diffHours <= 168) return '6h';
-    return '1d';
-  }
-
-  /**
-   * Test API connectivity
-   */
-  public async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    // Use search endpoint as health check since no dedicated health endpoint exists
+  public async healthCheck(): Promise<{
+    status: string;
+    timestamp: string;
+  }> {
     try {
       await this.makeRequest<SearchResponse>({
         method: 'POST',
         url: '/v1/search',
-        data: {
-          query: { match_all: {} },
-          size: 0, // Don't return any results, just test connectivity
-        },
+        data: { query: { match_all: {} }, size: 0 },
       });
-      return {
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-      };
+      return { status: 'ok', timestamp: new Date().toISOString() };
     } catch (error) {
       throw new Error(
         `Health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`

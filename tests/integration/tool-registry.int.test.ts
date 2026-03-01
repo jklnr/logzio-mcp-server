@@ -46,9 +46,13 @@ describe('tool registry integration', () => {
     TOOL_HANDLERS.search_logs = mockedHandler;
 
     try {
-      const result = await executeTool('search_logs', client as unknown as LogzioApiClient, {
-        query: 'error',
-      });
+      const result = await executeTool(
+        'search_logs',
+        client as unknown as LogzioApiClient,
+        {
+          query: 'error',
+        }
+      );
 
       expect(mockedHandler).toHaveBeenCalledWith(client, { query: 'error' });
       expect(result).toEqual(mockResult);

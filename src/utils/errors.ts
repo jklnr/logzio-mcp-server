@@ -133,6 +133,7 @@ export class ToolError extends LogzioError {
 /**
  * Generate appropriate error message based on API response
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- data reserved for future enhanced messages
 function getApiErrorMessage(statusCode: number, _data?: unknown): string {
   switch (statusCode) {
     case 400:

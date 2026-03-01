@@ -2,9 +2,13 @@ import { z } from 'zod';
 import type { LogzioApiClient } from '../api/client.js';
 import { getLogger } from '../utils/logger.js';
 import { ToolError, ValidationError } from '../utils/errors.js';
-import { TimeRangeSchema, LogSeveritySchema } from '../api/types.js';
-import { formatLogEntry } from '../utils/logs.js';
+import { LogSeveritySchema } from '../api/types.js';
 import { parseTimeRange } from '../api/endpoints.js';
+import {
+  formatSearchResult,
+  generateQuerySuggestions,
+  smartPhraseDetection,
+} from './searchHelpers.js';
 
 /**
  * Search logs tool parameter schema
@@ -70,74 +74,6 @@ export const SearchLogsParamsSchema = z.object({
 export type SearchLogsParams = z.infer<typeof SearchLogsParamsSchema>;
 
 /**
- * Detect if a query should be treated as an exact phrase and format it accordingly
- */
-function smartPhraseDetection(query: string): string {
-  // If already has quotes, field syntax, or boolean operators, leave as-is
-  if (
-    query.includes('"') ||
-    query.includes(':') ||
-    query.includes(' AND ') ||
-    query.includes(' OR ') ||
-    query.includes(' NOT ') ||
-    query.includes('*') ||
-    query.includes('?')
-  ) {
-    return query;
-  }
-
-  // If it's multiple words that look like a phrase, wrap in quotes for exact matching
-  const words = query.trim().split(/\s+/);
-  if (words.length > 1) {
-    // Check if it looks like a phrase (not individual field values)
-    const hasSpecialChars =
-      query.includes('-') || query.includes('_') || query.includes('.');
-    const isLikelyPhrase =
-      words.length <= 6 &&
-      (hasSpecialChars || words.some((word) => word.length > 3));
-
-    if (isLikelyPhrase) {
-      return `"${query}"`;
-    }
-  }
-
-  return query;
-}
-
-/**
- * Generate smart query suggestions based on input
- */
-function generateQuerySuggestions(
-  query: string,
-  params: SearchLogsParams
-): string[] {
-  const suggestions: string[] = [];
-
-  // If no time range specified, suggest appropriate ranges
-  if (!params.timeRange && !params.from && !params.to) {
-    suggestions.push(
-      '💡 Tip: Add timeRange="1h" for recent issues or "24h" for broader analysis'
-    );
-  }
-
-  // If no severity filter, suggest focusing on errors for debugging
-  if (!params.severity && query.toLowerCase().includes('error')) {
-    suggestions.push(
-      '💡 Tip: Add severity="error" to focus on critical issues'
-    );
-  }
-
-  // Provide tips about search precision
-  if (query && !query.includes('"') && query.split(/\s+/).length > 1) {
-    suggestions.push(
-      '💡 Search precision: Multi-word queries are automatically treated as exact phrases. Use individual words for broader matching.'
-    );
-  }
-
-  return suggestions;
-}
-
-/**
  * Search logs tool implementation
  */
 export async function searchLogs(
@@ -147,7 +83,6 @@ export async function searchLogs(
   const logger = getLogger('search-logs');
 
   try {
-    // Validate parameters
     const validatedParams = SearchLogsParamsSchema.parse(params);
 
     logger.info(
@@ -159,7 +94,6 @@ export async function searchLogs(
       'Searching logs'
     );
 
-    // Apply smart phrase detection
     const enhancedQuery = smartPhraseDetection(validatedParams.query);
     const wasQuoted =
       enhancedQuery !== validatedParams.query && enhancedQuery.includes('"');
@@ -171,50 +105,40 @@ export async function searchLogs(
       );
     }
 
-    // Determine time range
     let from = validatedParams.from;
     let to = validatedParams.to;
-
     if (!from || !to) {
       const timeRange = parseTimeRange(validatedParams.timeRange || '24h');
       from = from || timeRange.from;
       to = to || timeRange.to;
     }
 
-    // Build search parameters
-    const searchParams: any = {
-      query: enhancedQuery,
+    let searchQuery = enhancedQuery;
+    if (validatedParams.severity) {
+      searchQuery += ` AND level:${validatedParams.severity}`;
+    }
+
+    const searchParams: Record<string, unknown> = {
+      query: searchQuery,
       size: validatedParams.limit,
       sort:
         validatedParams.sort === 'desc' ? '@timestamp:desc' : '@timestamp:asc',
     };
-
     if (from) searchParams.from = from;
     if (to) searchParams.to = to;
     if (validatedParams.logType) searchParams.type = validatedParams.logType;
 
-    // Add severity filter to query if specified
-    if (validatedParams.severity) {
-      searchParams.query += ` AND level:${validatedParams.severity}`;
-    }
-
-    // Record search start time
     const searchStartTime = Date.now();
-
-    // Execute search
     const response = await client.searchLogs(searchParams);
-
-    // Calculate actual search time
     const searchDuration = Date.now() - searchStartTime;
 
-    if (!response.hits || !response.hits.hits) {
+    if (!response.hits?.hits) {
       const suggestions = generateQuerySuggestions(
         validatedParams.query,
         validatedParams
       );
       const suggestionText =
         suggestions.length > 0 ? '\n\n' + suggestions.join('\n') : '';
-
       return {
         content: [
           {
@@ -225,53 +149,25 @@ export async function searchLogs(
       };
     }
 
-    const logs = response.hits.hits;
-    const total =
-      typeof response.hits.total === 'number'
-        ? response.hits.total
-        : (response.hits.total as any)?.value || 0;
-
     logger.info(
       {
-        total,
-        returned: logs.length,
+        total:
+          typeof response.hits.total === 'number'
+            ? response.hits.total
+            : (response.hits.total as { value?: number })?.value || 0,
+        returned: response.hits.hits.length,
         took: searchDuration,
       },
       'Search completed'
     );
 
-    // Generate suggestions for query improvement
-    const suggestions = generateQuerySuggestions(
-      validatedParams.query,
-      validatedParams
-    );
-
-    // Format results with improved structure
-    const formattedLogs = logs.map((hit, index) =>
-      formatLogEntry(hit._source, index)
-    );
-
-    // Create comprehensive summary
-    const summary = `🔍 **Search Results**
-📊 Found ${total.toLocaleString()} total logs (showing top ${logs.length})
-⏱️  Search completed in ${searchDuration}ms
-🔎 Query: "${validatedParams.query}"${wasQuoted ? ' [exact phrase]' : ''}
-📅 Time range: ${from || 'N/A'} to ${to || 'N/A'}
-${validatedParams.severity ? `📈 Severity: ${validatedParams.severity}` : ''}
-${validatedParams.logType ? `🏷️  Log type: ${validatedParams.logType}` : ''}
-
-${suggestions.length > 0 ? suggestions.join('\n') + '\n' : ''}`;
-
-    const logEntries = formattedLogs.join('\n\n---\n\n');
-
-    return {
-      content: [
-        {
-          type: 'text',
-          text: summary + '\n\n📝 **Log Entries**\n\n' + logEntries,
-        },
-      ],
-    };
+    return formatSearchResult(response, {
+      params: validatedParams,
+      from,
+      to,
+      duration: searchDuration,
+      wasQuoted,
+    });
   } catch (error) {
     logger.error(error as Error, 'Search logs failed');
 

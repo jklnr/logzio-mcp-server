@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { LogStatsResponse } from '../../src/api/types.js';
 import { getLogStats } from '../../src/tools/stats.js';
 import { defaultStatsResponse } from '../fixtures/statsResponse.js';
 import { createMockApiClient } from '../helpers/mockApiClient.js';
@@ -47,7 +48,7 @@ describe('getLogStats tool integration', () => {
       timeRange: {},
       buckets: [],
       aggregations: {},
-    } as any);
+    } as LogStatsResponse);
 
     const result = await getLogStats(client as unknown as LogzioApiClient, {
       timeRange: '1h',
@@ -73,7 +74,7 @@ describe('getLogStats tool integration', () => {
           ],
         },
       },
-    } as any);
+    } as LogStatsResponse);
 
     const result = await getLogStats(client as unknown as LogzioApiClient, {
       timeRange: '24h',

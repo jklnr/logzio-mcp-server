@@ -1,5 +1,9 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import type {
+  CallToolRequest,
+  CallToolResult,
+} from '@modelcontextprotocol/sdk/types.js';
 import {
   CallToolRequestSchema,
   ErrorCode,
@@ -69,14 +73,13 @@ export class LogzioMcpServer {
   /**
    * Handle incoming tool calls
    */
-  private async handleToolCall(request: any): Promise<any> {
+  private async handleToolCall(
+    request: CallToolRequest
+  ): Promise<CallToolResult> {
     const { name: toolName, arguments: args } = request.params;
 
     this.logger.info(
-      {
-        toolName,
-        hasArgs: Boolean(args),
-      },
+      { toolName, hasArgs: Boolean(args) },
       'Tool call received'
     );
 
@@ -86,48 +89,44 @@ export class LogzioMcpServer {
 
     try {
       const result = await executeTool(toolName, this.client, args || {});
-
       this.logger.info(
-        {
-          toolName,
-          contentLength: result.content[0]?.text?.length || 0,
-        },
+        { toolName, contentLength: result.content[0]?.text?.length || 0 },
         'Tool call completed'
       );
-
       return result;
     } catch (error) {
-      this.logger.error(
-        {
-          err: error,
-          toolName,
-          errorType:
-            error instanceof Error ? error.constructor.name : 'Unknown',
-        },
-        'Tool call failed'
-      );
+      throw this.mapToolError(error, toolName);
+    }
+  }
 
-      if (error instanceof ToolError) {
-        throw new McpError(
-          ErrorCode.InternalError,
-          `Tool execution failed: ${error.message}`,
-          error.context
-        );
-      }
+  private mapToolError(error: unknown, toolName: string): McpError {
+    this.logger.error(
+      {
+        err: error,
+        toolName,
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      },
+      'Tool call failed'
+    );
 
-      if (error instanceof ConfigurationError) {
-        throw new McpError(
-          ErrorCode.InvalidParams,
-          `Configuration error: ${error.message}`,
-          error.context
-        );
-      }
-
-      throw new McpError(
+    if (error instanceof ToolError) {
+      return new McpError(
         ErrorCode.InternalError,
-        `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Tool execution failed: ${error.message}`,
+        error.context
       );
     }
+    if (error instanceof ConfigurationError) {
+      return new McpError(
+        ErrorCode.InvalidParams,
+        `Configuration error: ${error.message}`,
+        error.context
+      );
+    }
+    return new McpError(
+      ErrorCode.InternalError,
+      `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 
   /**

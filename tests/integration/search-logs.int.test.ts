@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { SearchResponse } from '../../src/api/types.js';
 import { searchLogs } from '../../src/tools/search.js';
 import { ValidationError } from '../../src/utils/errors.js';
 import { defaultSearchResponse } from '../fixtures/searchResponse.js';
@@ -54,7 +55,7 @@ describe('searchLogs tool integration', () => {
 
   it('returns a no-results message when response has no hits', async () => {
     const client = createMockApiClient();
-    client.searchLogs.mockResolvedValue({} as any);
+    client.searchLogs.mockResolvedValue({} as SearchResponse);
 
     const result = await searchLogs(client as unknown as LogzioApiClient, {
       query: 'this-will-not-match',

@@ -64,54 +64,73 @@ export function parseConfig(args: string[]): Config {
   return ConfigSchema.parse(rawConfig);
 }
 
+type CliArgHandler = (
+  config: Partial<Config>,
+  nextArg: string,
+  advance: () => void
+) => void;
+
+const CLI_HANDLERS: Record<string, CliArgHandler> = {
+  apiKey: (config, nextArg, advance) => {
+    if (nextArg && !nextArg.startsWith('-')) {
+      config.apiKey = nextArg;
+      advance();
+    }
+  },
+  region: (config, nextArg, advance) => {
+    if (nextArg && !nextArg.startsWith('-')) {
+      config.region = nextArg as LogzioRegion;
+      advance();
+    }
+  },
+  logzioUrl: (config, nextArg, advance) => {
+    if (nextArg && !nextArg.startsWith('-')) {
+      config.logzioUrl = nextArg;
+      advance();
+    }
+  },
+  '--timeout': (config, nextArg, advance) => {
+    const val = Number(nextArg);
+    if (!isNaN(val)) {
+      config.timeout = val;
+      advance();
+    }
+  },
+  '--retry-attempts': (config, nextArg, advance) => {
+    const val = Number(nextArg);
+    if (!isNaN(val)) {
+      config.retryAttempts = val;
+      advance();
+    }
+  },
+  '--max-results': (config, nextArg, advance) => {
+    const val = Number(nextArg);
+    if (!isNaN(val)) {
+      config.maxResults = val;
+      advance();
+    }
+  },
+};
+
 /**
  * Parse command line arguments
  */
 function parseCliArgs(args: string[]): Partial<Config> {
   const config: Partial<Config> = {};
+  let i = 0;
 
-  for (let i = 0; i < args.length; i++) {
+  const advance = (): void => {
+    i++;
+  };
+
+  while (i < args.length) {
     const arg = args[i];
     const nextArg = args[i + 1];
-
-    switch (arg) {
-      case 'apiKey':
-        if (nextArg && !nextArg.startsWith('-')) {
-          config.apiKey = nextArg;
-          i++;
-        }
-        break;
-      case 'region':
-        if (nextArg && !nextArg.startsWith('-')) {
-          config.region = nextArg as LogzioRegion;
-          i++;
-        }
-        break;
-      case 'logzioUrl':
-        if (nextArg && !nextArg.startsWith('-')) {
-          config.logzioUrl = nextArg;
-          i++;
-        }
-        break;
-      case '--timeout':
-        if (nextArg && !isNaN(Number(nextArg))) {
-          config.timeout = Number(nextArg);
-          i++;
-        }
-        break;
-      case '--retry-attempts':
-        if (nextArg && !isNaN(Number(nextArg))) {
-          config.retryAttempts = Number(nextArg);
-          i++;
-        }
-        break;
-      case '--max-results':
-        if (nextArg && !isNaN(Number(nextArg))) {
-          config.maxResults = Number(nextArg);
-          i++;
-        }
-        break;
+    const handler = CLI_HANDLERS[arg];
+    if (handler) {
+      handler(config, nextArg ?? '', advance);
     }
+    i++;
   }
 
   return config;

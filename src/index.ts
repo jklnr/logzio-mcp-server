@@ -9,6 +9,7 @@ import { ConfigurationError } from './utils/errors.js';
  * Display usage information
  */
 function showUsage(): void {
+  // eslint-disable-next-line no-console -- CLI help output
   console.log(`
 MCP Server for Logz.io - Model Context Protocol Integration
 
@@ -137,6 +138,7 @@ process.on('uncaughtException', (error) => {
 
 // Start the application
 main().catch((error) => {
+  // eslint-disable-next-line no-console -- Fatal startup error before logger
   console.error('Startup failed:', error);
   process.exit(1);
 });

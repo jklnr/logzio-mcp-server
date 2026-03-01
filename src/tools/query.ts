@@ -2,8 +2,11 @@ import { z } from 'zod';
 import type { LogzioApiClient } from '../api/client.js';
 import { getLogger } from '../utils/logger.js';
 import { ToolError, ValidationError } from '../utils/errors.js';
-import { formatLogEntry } from '../utils/logs.js';
-import { buildLuceneQuery } from '../api/endpoints.js';
+import {
+  buildQueryError,
+  buildQueryPayload,
+  formatQueryResult,
+} from './queryHelpers.js';
 
 /**
  * Query logs tool parameter schema
@@ -58,18 +61,7 @@ export const QueryLogsParamsSchema = z.object({
 
 export type QueryLogsParams = z.infer<typeof QueryLogsParamsSchema>;
 
-/**
- * Analyze and provide suggestions for Lucene queries
- */
-function analyzeLuceneQuery(query: string): {
-  complexity: 'simple' | 'moderate' | 'complex';
-  suggestions: string[];
-  warnings: string[];
-} {
-  const suggestions: string[] = [];
-  const warnings: string[] = [];
-
-  // Analyze query complexity
+function getQueryComplexity(query: string): 'simple' | 'moderate' | 'complex' {
   const hasBoolean =
     query.includes(' AND ') ||
     query.includes(' OR ') ||
@@ -78,20 +70,32 @@ function analyzeLuceneQuery(query: string): {
   const hasWildcards = query.includes('*') || query.includes('?');
   const hasParentheses = query.includes('(') && query.includes(')');
 
-  let complexity: 'simple' | 'moderate' | 'complex' = 'simple';
-  if (hasBoolean || hasRanges) complexity = 'moderate';
-  if (hasWildcards && hasBoolean && hasParentheses) complexity = 'complex';
+  if (hasWildcards && hasBoolean && hasParentheses) return 'complex';
+  if (hasBoolean || hasRanges) return 'moderate';
+  return 'simple';
+}
 
-  // Performance suggestions
+function getQueryWarnings(query: string): string[] {
+  const warnings: string[] = [];
   if (query.startsWith('*') || query.includes(':*')) {
     warnings.push('⚠️  Wildcard at beginning of query may be slow');
   }
-
   if (query.includes('message:*')) {
     warnings.push('⚠️  Wildcard searches on message field can be expensive');
   }
+  return warnings;
+}
 
-  return { complexity, suggestions, warnings };
+function analyzeLuceneQuery(query: string): {
+  complexity: 'simple' | 'moderate' | 'complex';
+  suggestions: string[];
+  warnings: string[];
+} {
+  return {
+    complexity: getQueryComplexity(query),
+    suggestions: [],
+    warnings: getQueryWarnings(query),
+  };
 }
 
 /**
@@ -104,56 +108,20 @@ export async function queryLogs(
   const logger = getLogger('query-logs');
 
   try {
-    // Validate parameters
     const validatedParams = QueryLogsParamsSchema.parse(params);
-
     logger.info(
-      {
-        query: validatedParams.luceneQuery,
-        size: validatedParams.size,
-      },
+      { query: validatedParams.luceneQuery, size: validatedParams.size },
       'Executing Lucene query'
     );
 
-    // Analyze query for suggestions
     const queryAnalysis = analyzeLuceneQuery(validatedParams.luceneQuery);
-
-    // Build query payload
-    const queryConfig: {
-      query: string;
-      size: number;
-      sort: Array<Record<string, unknown>>;
-      from?: string;
-      to?: string;
-    } = {
-      query: validatedParams.luceneQuery,
-      size: validatedParams.size,
-      sort:
-        validatedParams.sort === 'desc'
-          ? [{ '@timestamp': { order: 'desc' } }]
-          : [{ '@timestamp': { order: 'asc' } }],
-    };
-
-    if (validatedParams.from) {
-      queryConfig.from = validatedParams.from;
-    }
-
-    if (validatedParams.to) {
-      queryConfig.to = validatedParams.to;
-    }
-
-    const queryPayload = buildLuceneQuery(queryConfig);
-
-    // Record query start time
+    const queryPayload = buildQueryPayload(validatedParams);
     const queryStartTime = Date.now();
 
-    // Execute query
     const response = await client.queryLogs(queryPayload);
-
-    // Calculate actual query time
     const queryDuration = Date.now() - queryStartTime;
 
-    if (!response.hits || !response.hits.hits) {
+    if (!response.hits?.hits) {
       return {
         content: [
           {
@@ -164,48 +132,25 @@ export async function queryLogs(
       };
     }
 
-    const logs = response.hits.hits;
-    const total =
-      typeof response.hits.total === 'number'
-        ? response.hits.total
-        : (response.hits.total as any)?.value || 0;
-
     logger.info(
       {
-        total,
-        returned: logs.length,
+        total:
+          typeof response.hits.total === 'number'
+            ? response.hits.total
+            : (response.hits.total as { value?: number })?.value || 0,
+        returned: response.hits.hits.length,
         took: queryDuration,
         complexity: queryAnalysis.complexity,
       },
       'Query completed'
     );
 
-    // Format results with improved structure
-    const formattedLogs = logs.map((hit, index) =>
-      formatLogEntry(hit._source, index)
+    return formatQueryResult(
+      response,
+      validatedParams,
+      queryAnalysis,
+      queryDuration
     );
-
-    // Create comprehensive summary
-    const summary = `🔍 **Lucene Query Results**
-📊 Found ${total.toLocaleString()} total logs (showing top ${logs.length})
-⏱️  Query completed in ${queryDuration}ms
-🧮 Query complexity: ${queryAnalysis.complexity}
-🔎 Lucene query: \`${validatedParams.luceneQuery}\`
-📅 Time range: ${validatedParams.from || 'N/A'} to ${validatedParams.to || 'N/A'}
-
-${queryAnalysis.warnings.length > 0 ? queryAnalysis.warnings.join('\n') + '\n' : ''}
-${queryAnalysis.suggestions.length > 0 ? queryAnalysis.suggestions.join('\n') + '\n' : ''}`;
-
-    const logEntries = formattedLogs.join('\n\n---\n\n');
-
-    return {
-      content: [
-        {
-          type: 'text',
-          text: summary + '\n\n📝 **Log Entries**\n\n' + logEntries,
-        },
-      ],
-    };
   } catch (error) {
     logger.error(error as Error, 'Query logs failed');
 
@@ -217,25 +162,9 @@ ${queryAnalysis.suggestions.length > 0 ? queryAnalysis.suggestions.join('\n') + 
       );
     }
 
-    // Enhanced error handling for Lucene syntax errors
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    let enhancedError = `Failed to execute Lucene query: ${errorMessage}`;
-
-    if (
-      errorMessage.includes('parsing_exception') ||
-      errorMessage.includes('syntax')
-    ) {
-      enhancedError +=
-        '\n\n🔧 **Lucene Syntax Help:**\n' +
-        '• Field searches: level:ERROR, host:web*\n' +
-        '• Boolean: (ERROR OR WARN) AND service:api\n' +
-        '• Ranges: timestamp:[2024-01-01 TO 2024-01-31]\n' +
-        '• Exclusions: level:ERROR AND NOT k8s_namespace_name:monitoring\n\n' +
-        '💡 Try using the search_logs tool for simpler text searches.';
-    }
-
-    throw new ToolError(enhancedError, 'query_logs', { originalError: error });
+    throw new ToolError(buildQueryError(error), 'query_logs', {
+      originalError: error,
+    });
   }
 }
 
