@@ -29,7 +29,7 @@ export class LogzioMcpServer {
     this.client = new LogzioApiClient(config);
     this.server = new Server(
       {
-        name: 'mcp-server-logzio',
+        name: 'logzio-mcp-server',
         version: '0.1.0',
       },
       {

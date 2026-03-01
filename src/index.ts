@@ -14,7 +14,7 @@ function showUsage(): void {
 MCP Server for Logz.io - Model Context Protocol Integration
 
 USAGE:
-  npx mcp-server-logzio apiKey <your-api-key>
+  npx logzio-mcp-server apiKey <your-api-key>
 
 ARGUMENTS:
   apiKey <key>        Your Logz.io API key (required)
@@ -32,10 +32,10 @@ ENVIRONMENT VARIABLES:
   LOG_LEVEL               Logging level (debug, info, warn, error)
 
 EXAMPLES:
-  npx mcp-server-logzio apiKey your-key
+  npx logzio-mcp-server apiKey your-key
 
   export LOGZIO_API_KEY=your-key
-  npx mcp-server-logzio
+  npx logzio-mcp-server
 
 TOOLS PROVIDED:
   search_logs     - Search logs with simple queries and filters

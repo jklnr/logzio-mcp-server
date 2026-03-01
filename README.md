@@ -20,7 +20,7 @@ Add this to your Claude/Cursor/etc configuration file:
       "command": "npx",
       "args": [
         "-y",
-        "mcp-server-logzio", 
+        "logzio-mcp-server", 
         "apiKey", "YOUR_LOGZIO_API_KEY"
       ]
     }
@@ -40,7 +40,7 @@ US is the default region. For other regions:
       "command": "npx", 
       "args": [
         "-y",
-        "mcp-server-logzio",
+        "logzio-mcp-server",
         "apiKey", "YOUR_LOGZIO_API_KEY",
         "region", "eu" # add this for example
       ]
@@ -126,8 +126,8 @@ Retrieve aggregated log statistics and metrics.
 
 ```bash
 # Clone the repository
-git clone https://github.com/jklnr/mcp-server-logzio.git
-cd mcp-server-logzio
+git clone https://github.com/jklnr/logzio-mcp-server.git
+cd logzio-mcp-server
 
 # Install dependencies
 npm install
@@ -153,7 +153,7 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-mcp-server-logzio/
+logzio-mcp-server/
 ├── src/
 │   ├── api/           # Logz.io API client and types
 │   ├── tools/         # MCP tool implementations

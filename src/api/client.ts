@@ -36,7 +36,7 @@ export class LogzioApiClient {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'User-Agent': 'mcp-server-logzio/0.1.0',
+        'User-Agent': 'logzio-mcp-server/0.1.0',
         'X-API-TOKEN': this.config.apiKey,
       },
     });

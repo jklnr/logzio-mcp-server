@@ -1,5 +1,5 @@
 {
-  "name": "mcp-server-logzio",
+  "name": "logzio-mcp-server",
   "version": "1.0.3",
   "description": "Model Context Protocol server for Logz.io log management platform",
   "main": "dist/index.js",
@@ -46,12 +46,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jklnr/mcp-server-logzio.git"
+    "url": "https://github.com/jklnr/logzio-mcp-server.git"
   },
   "bugs": {
-    "url": "https://github.com/jklnr/mcp-server-logzio/issues"
+    "url": "https://github.com/jklnr/logzio-mcp-server/issues"
   },
-  "homepage": "https://github.com/jklnr/mcp-server-logzio#readme",
+  "homepage": "https://github.com/jklnr/logzio-mcp-server#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
     "axios": "^1.13.6",
@@ -75,7 +75,7 @@
     "vitest": "^3.2.4"
   },
   "bin": {
-    "mcp-server-logzio": "./dist/index.js"
+    "logzio-mcp-server": "./dist/index.js"
   },
   "files": [
     "dist",

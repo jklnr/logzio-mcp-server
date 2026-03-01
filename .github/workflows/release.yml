@@ -73,16 +73,16 @@ jobs:
           body: |
             ## Changes in v${{ steps.get_version.outputs.VERSION }}
             
-            See [CHANGELOG.md](https://github.com/jklnr/mcp-server-logzio/blob/main/CHANGELOG.md) for detailed changes.
+            See [CHANGELOG.md](https://github.com/jklnr/logzio-mcp-server/blob/main/CHANGELOG.md) for detailed changes.
             
             ## Installation
             
             ```bash
-            npm install -g mcp-server-logzio@${{ steps.get_version.outputs.VERSION }}
+            npm install -g logzio-mcp-server@${{ steps.get_version.outputs.VERSION }}
             ```
             
             Or use directly:
             
             ```bash
-            npx mcp-server-logzio@${{ steps.get_version.outputs.VERSION }} apiKey YOUR_API_KEY
+            npx logzio-mcp-server@${{ steps.get_version.outputs.VERSION }} apiKey YOUR_API_KEY
             ``` 
