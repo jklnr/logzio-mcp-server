@@ -1,12 +1,10 @@
 # MCP Server for Logz.io
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D24.14.0-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 
-An *unofficial*\* [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that enables AI assistants like Claude to interact with [Logz.io](https://logz.io/)'s log management platform. Includes tools for simple log search, Lucene query search, and fetching basic statistics from logz io.
-
-\*I'll be a little surprised if logz io makes an *official* MCP server. Instead, they seem to be leaning heavily into integrating AI directly into their tooling, which makes sense, but doesn't give the user much flexibility over models or integration with external tools.. which is why this project exists.
+An *unofficial* [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that enables AI assistants like Claude to interact with [Logz.io](https://logz.io/)'s log management platform. Includes tools for simple log search, Lucene query search, and fetching basic statistics from logz io.
 
 ## 🚀 Quick Start
 
@@ -120,7 +118,7 @@ Retrieve aggregated log statistics and metrics.
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 24.14.0+
 - TypeScript 5.8+
 - Valid Logz.io account and API key
 

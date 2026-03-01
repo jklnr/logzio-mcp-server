@@ -9,6 +9,7 @@ import { ConfigurationError } from './utils/errors.js';
  * Display usage information
  */
 function showUsage(): void {
+  // eslint-disable-next-line no-console -- CLI help output
   console.log(`
 MCP Server for Logz.io - Model Context Protocol Integration
 
@@ -43,6 +44,37 @@ TOOLS PROVIDED:
 `);
 }
 
+function handleStartupError(
+  error: unknown,
+  logger: ReturnType<typeof getLogger>
+): never {
+  logger.error(error, 'Failed to start MCP server');
+
+  if (error instanceof ConfigurationError) {
+    // eslint-disable-next-line no-console
+    console.error(`\nConfiguration Error: ${error.message}\n`);
+    showUsage();
+    process.exit(1);
+  }
+
+  // Log full error details for debugging
+  // eslint-disable-next-line no-console
+  console.error(
+    `\nFatal Error 1: ${error instanceof Error ? error.message : 'Unknown error'}`
+  );
+  if (error instanceof Error && error.stack) {
+    // eslint-disable-next-line no-console
+    console.error('Stack trace:', error.stack);
+  }
+  if (error && typeof error === 'object') {
+    // eslint-disable-next-line no-console
+    console.error('Error details:', JSON.stringify(error, null, 2));
+  }
+  // eslint-disable-next-line no-console
+  console.error('');
+  process.exit(1);
+}
+
 /**
  * Main entry point
  */
@@ -60,12 +92,15 @@ async function main(): Promise<void> {
     const args = process.argv.slice(2);
     const config = parseConfig(args);
 
-    logger.info('Starting MCP server for Logz.io', {
-      logzioUrl: config.logzioUrl,
-      timeout: config.timeout,
-      retryAttempts: config.retryAttempts,
-      maxResults: config.maxResults,
-    });
+    logger.info(
+      {
+        logzioUrl: config.logzioUrl,
+        timeout: config.timeout,
+        retryAttempts: config.retryAttempts,
+        maxResults: config.maxResults,
+      },
+      'Starting MCP server for Logz.io'
+    );
 
     // Create and start the server
     const server = new LogzioMcpServer(config);
@@ -75,38 +110,20 @@ async function main(): Promise<void> {
       await server.healthCheck();
       logger.info('Logz.io connectivity verified');
     } catch (error) {
-      logger.warn('Initial health check failed, but continuing', error);
+      logger.warn(error, 'Initial health check failed, but continuing');
     }
 
     // Start the MCP server
     await server.start();
-
   } catch (error) {
-    logger.error('Failed to start MCP server', error);
-
-    if (error instanceof ConfigurationError) {
-      console.error(`\nConfiguration Error: ${error.message}\n`);
-      showUsage();
-      process.exit(1);
-    }
-
-    // Log full error details for debugging
-    console.error(`\nFatal Error 1: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    if (error instanceof Error && error.stack) {
-      console.error('Stack trace:', error.stack);
-    }
-    if (error && typeof error === 'object') {
-      console.error('Error details:', JSON.stringify(error, null, 2));
-    }
-    console.error('');
-    process.exit(1);
+    handleStartupError(error, logger);
   }
 }
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   const logger = getLogger('main');
-  logger.error('Unhandled promise rejection', reason as Error, {
+  logger.error(reason as Error, 'Unhandled promise rejection', {
     promise: promise.toString(),
   });
   process.exit(1);
@@ -115,12 +132,13 @@ process.on('unhandledRejection', (reason, promise) => {
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   const logger = getLogger('main');
-  logger.error('Uncaught exception', error);
+  logger.error(error, 'Uncaught exception');
   process.exit(1);
 });
 
 // Start the application
 main().catch((error) => {
+  // eslint-disable-next-line no-console -- Fatal startup error before logger
   console.error('Startup failed:', error);
   process.exit(1);
-}); 
+});

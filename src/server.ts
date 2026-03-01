@@ -1,5 +1,9 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import type {
+  CallToolRequest,
+  CallToolResult,
+} from '@modelcontextprotocol/sdk/types.js';
 import {
   CallToolRequestSchema,
   ErrorCode,
@@ -23,20 +27,26 @@ export class LogzioMcpServer {
 
   constructor(config: Config) {
     this.client = new LogzioApiClient(config);
-    this.server = new Server({
-      name: 'mcp-server-logzio',
-      version: '0.1.0',
-    }, {
-      capabilities: {
-        tools: {},
+    this.server = new Server(
+      {
+        name: 'mcp-server-logzio',
+        version: '0.1.0',
       },
-    });
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    );
 
     this.setupHandlers();
-    this.logger.info('MCP server initialized', {
-      logzioUrl: config.logzioUrl,
-      toolCount: TOOLS.length,
-    });
+    this.logger.info(
+      {
+        logzioUrl: config.logzioUrl,
+        toolCount: TOOLS.length,
+      },
+      'MCP server initialized'
+    );
   }
 
   /**
@@ -46,7 +56,7 @@ export class LogzioMcpServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       this.logger.debug('Listing available tools');
       return {
-        tools: TOOLS.map(tool => ({
+        tools: TOOLS.map((tool) => ({
           name: tool.name,
           description: tool.description,
           inputSchema: tool.inputSchema,
@@ -54,58 +64,69 @@ export class LogzioMcpServer {
       };
     });
 
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      const { name: toolName, arguments: args } = request.params;
-      
-      this.logger.info('Tool call received', {
+    this.server.setRequestHandler(
+      CallToolRequestSchema,
+      this.handleToolCall.bind(this)
+    );
+  }
+
+  /**
+   * Handle incoming tool calls
+   */
+  private async handleToolCall(
+    request: CallToolRequest
+  ): Promise<CallToolResult> {
+    const { name: toolName, arguments: args } = request.params;
+
+    this.logger.info(
+      { toolName, hasArgs: Boolean(args) },
+      'Tool call received'
+    );
+
+    if (!isValidTool(toolName)) {
+      throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${toolName}`);
+    }
+
+    try {
+      const result = await executeTool(toolName, this.client, args || {});
+      this.logger.info(
+        { toolName, contentLength: result.content[0]?.text?.length || 0 },
+        'Tool call completed'
+      );
+      return result;
+    } catch (error) {
+      throw this.mapToolError(error, toolName);
+    }
+  }
+
+  private mapToolError(error: unknown, toolName: string): McpError {
+    this.logger.error(
+      {
+        err: error,
         toolName,
-        hasArgs: Boolean(args),
-      });
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      },
+      'Tool call failed'
+    );
 
-      if (!isValidTool(toolName)) {
-        throw new McpError(
-          ErrorCode.MethodNotFound,
-          `Unknown tool: ${toolName}`
-        );
-      }
-
-      try {
-        const result = await executeTool(toolName, this.client, args || {});
-        
-        this.logger.info('Tool call completed', {
-          toolName,
-          contentLength: result.content[0]?.text?.length || 0,
-        });
-
-        return result;
-      } catch (error) {
-        this.logger.error('Tool call failed', error, {
-          toolName,
-          errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-        });
-
-        if (error instanceof ToolError) {
-          throw new McpError(
-            ErrorCode.InternalError,
-            `Tool execution failed: ${error.message}`,
-            error.context
-          );
-        }
-
-        if (error instanceof ConfigurationError) {
-          throw new McpError(
-            ErrorCode.InvalidParams,
-            `Configuration error: ${error.message}`,
-            error.context
-          );
-        }
-
-        throw new McpError(
-          ErrorCode.InternalError,
-          `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
-        );
-      }
-    });
+    if (error instanceof ToolError) {
+      return new McpError(
+        ErrorCode.InternalError,
+        `Tool execution failed: ${error.message}`,
+        error.context
+      );
+    }
+    if (error instanceof ConfigurationError) {
+      return new McpError(
+        ErrorCode.InvalidParams,
+        `Configuration error: ${error.message}`,
+        error.context
+      );
+    }
+    return new McpError(
+      ErrorCode.InternalError,
+      `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 
   /**
@@ -115,9 +136,9 @@ export class LogzioMcpServer {
     // Connect to stdio transport
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    
+
     this.logger.info('MCP server started and ready for connections');
-    
+
     // Handle process signals for graceful shutdown
     process.on('SIGINT', () => this.shutdown('SIGINT'));
     process.on('SIGTERM', () => this.shutdown('SIGTERM'));
@@ -127,14 +148,14 @@ export class LogzioMcpServer {
    * Shutdown the server gracefully
    */
   private async shutdown(signal: string): Promise<void> {
-    this.logger.info('Shutting down MCP server', { signal });
-    
+    this.logger.info({ signal }, 'Shutting down MCP server');
+
     try {
       await this.server.close();
       this.logger.info('MCP server shutdown complete');
       process.exit(0);
     } catch (error) {
-      this.logger.error('Error during shutdown', error);
+      this.logger.error(error as Error, 'Error during shutdown');
       process.exit(1);
     }
   }
@@ -146,8 +167,8 @@ export class LogzioMcpServer {
     try {
       return await this.client.healthCheck();
     } catch (error) {
-      this.logger.error('Health check failed', error);
+      this.logger.error(error as Error, 'Health check failed');
       throw error;
     }
   }
-} 
+}

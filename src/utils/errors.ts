@@ -5,7 +5,11 @@ export abstract class LogzioError extends Error {
   public readonly code: string;
   public readonly context?: Record<string, unknown>;
 
-  constructor(message: string, code: string, context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    code: string,
+    context?: Record<string, unknown>
+  ) {
     super(message);
     this.name = this.constructor.name;
     this.code = code;
@@ -129,7 +133,8 @@ export class ToolError extends LogzioError {
 /**
  * Generate appropriate error message based on API response
  */
-function getApiErrorMessage(statusCode: number, data?: unknown): string {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- data reserved for future enhanced messages
+function getApiErrorMessage(statusCode: number, _data?: unknown): string {
   switch (statusCode) {
     case 400:
       return 'Bad request: Please check your query parameters and format';
@@ -156,6 +161,10 @@ function getApiErrorMessage(statusCode: number, data?: unknown): string {
  * Check if error is retryable
  */
 export function isRetryableError(error: unknown): boolean {
+  if (error instanceof RateLimitError) {
+    return true;
+  }
+
   if (error instanceof ApiError) {
     // Retry on 5xx errors and rate limits
     return (
@@ -163,7 +172,7 @@ export function isRetryableError(error: unknown): boolean {
       error instanceof RateLimitError
     );
   }
-  
+
   // Retry on network errors
   if (error instanceof Error) {
     return (
@@ -173,7 +182,7 @@ export function isRetryableError(error: unknown): boolean {
       error.message.includes('timeout')
     );
   }
-  
+
   return false;
 }
 
@@ -185,4 +194,4 @@ export function getRetryDelay(error: unknown): number | undefined {
     return error.retryAfter;
   }
   return undefined;
-} 
+}
