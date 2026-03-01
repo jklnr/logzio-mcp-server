@@ -127,7 +127,7 @@ ${suggestions.length > 0 ? suggestions.join('\n') + '\n' : ''}`;
     const timeDistribution = formatTimeBuckets(response.buckets || []);
 
     // Format aggregations
-    const aggregationResults = formatAggregations(response.aggregations);
+    const aggregationResults = formatAggregations(response.aggregations || {});
 
     return {
       content: [

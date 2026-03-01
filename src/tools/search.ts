@@ -118,7 +118,14 @@ export async function searchLogs(
       searchQuery += ` AND level:${validatedParams.severity}`;
     }
 
-    const searchParams: Record<string, unknown> = {
+    const searchParams: {
+      query: string;
+      size: number;
+      sort: string;
+      from?: string;
+      to?: string;
+      type?: string;
+    } = {
       query: searchQuery,
       size: validatedParams.limit,
       sort:

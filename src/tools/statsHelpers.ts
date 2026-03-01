@@ -1,5 +1,5 @@
 type AggregationData = {
-  buckets?: Array<{ key?: string; doc_count?: number }>;
+  buckets?: Array<{ key?: string; doc_count?: number; count?: number }>;
   value?: number;
   sum_other_doc_count?: number;
 };
@@ -49,13 +49,12 @@ export function formatAggregations(
 
     if (data.buckets?.length) {
       const topBuckets = data.buckets.slice(0, 10);
-      for (let i = 0; i < topBuckets.length; i++) {
-        const bucket = topBuckets[i];
+      for (const [index, bucket] of topBuckets.entries()) {
         const count = bucket.doc_count ?? bucket.count ?? 0;
         const pct = data.sum_other_doc_count
           ? Math.round((count / (count + data.sum_other_doc_count)) * 100)
           : '';
-        result += `   ${i + 1}. ${bucket.key}: ${count.toLocaleString()} logs${pct ? ` (${pct}%)` : ''}\n`;
+        result += `   ${index + 1}. ${bucket.key ?? 'unknown'}: ${count.toLocaleString()} logs${pct ? ` (${pct}%)` : ''}\n`;
       }
       if (data.buckets.length > 10) {
         result += `   ... and ${data.buckets.length - 10} more values\n`;

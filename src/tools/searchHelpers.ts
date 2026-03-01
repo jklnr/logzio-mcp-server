@@ -2,11 +2,11 @@ import type { SearchResponse } from '../api/types.js';
 
 type SearchParams = {
   query: string;
-  timeRange?: string;
-  from?: string;
-  to?: string;
-  severity?: string;
-  logType?: string;
+  timeRange?: string | undefined;
+  from?: string | undefined;
+  to?: string | undefined;
+  severity?: string | undefined;
+  logType?: string | undefined;
 };
 import { formatLogEntry } from '../utils/logs.js';
 

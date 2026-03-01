@@ -125,6 +125,10 @@ function parseCliArgs(args: string[]): Partial<Config> {
 
   while (i < args.length) {
     const arg = args[i];
+    if (!arg) {
+      i++;
+      continue;
+    }
     const nextArg = args[i + 1];
     const handler = CLI_HANDLERS[arg];
     if (handler) {

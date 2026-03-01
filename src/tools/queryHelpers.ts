@@ -6,8 +6,8 @@ export function buildQueryPayload(validatedParams: {
   luceneQuery: string;
   size: number;
   sort: 'asc' | 'desc';
-  from?: string;
-  to?: string;
+  from?: string | undefined;
+  to?: string | undefined;
 }): Record<string, unknown> {
   return buildLuceneQuery({
     query: validatedParams.luceneQuery,
@@ -23,7 +23,11 @@ export function buildQueryPayload(validatedParams: {
 
 export function formatQueryResult(
   response: SearchResponse,
-  validatedParams: { luceneQuery: string; from?: string; to?: string },
+  validatedParams: {
+    luceneQuery: string;
+    from?: string | undefined;
+    to?: string | undefined;
+  },
   queryAnalysis: {
     complexity: string;
     suggestions: string[];
