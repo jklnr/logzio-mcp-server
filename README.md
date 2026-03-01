@@ -126,7 +126,7 @@ Retrieve aggregated log statistics and metrics.
 
 ```bash
 # Clone the repository
-git clone https://github.com/modelcontextprotocol/mcp-server-logzio.git
+git clone https://github.com/jklnr/mcp-server-logzio.git
 cd mcp-server-logzio
 
 # Install dependencies
