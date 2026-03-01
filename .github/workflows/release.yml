@@ -6,6 +6,7 @@ on:
       - 'v*'  # Trigger on version tags like v0.1.0
 
 permissions:
+  id-token: write   # Required for OIDC trusted publishing
   contents: write
   packages: write
 
@@ -50,8 +51,6 @@ jobs:
 
       - name: Publish to npm
         run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   release:
     needs: [build, publish]
