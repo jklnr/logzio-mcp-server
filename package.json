@@ -63,7 +63,7 @@
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^8.54.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.1",
@@ -72,7 +72,7 @@
     "tsx": "^4.6.0",
     "typescript": "^5.8.3",
     "vite": "^7.3.1",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.8"
   },
   "bin": {
     "mcp-server-logzio": "./dist/index.js"
