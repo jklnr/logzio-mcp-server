@@ -22,8 +22,11 @@ describe('LogzioApiClient retry behavior', () => {
   it('retries network errors with exponential backoff and then succeeds', async () => {
     const client = new LogzioApiClient(baseConfig);
     const sleepSpy = vi
-      .spyOn(client as unknown as { sleep: unknown }, 'sleep' as never)
-      .mockResolvedValue(undefined as never);
+      .spyOn(
+        client as unknown as { sleep: (ms: number) => Promise<void> },
+        'sleep'
+      )
+      .mockResolvedValue(undefined);
 
     const axiosMock = vi
       .fn()
@@ -47,8 +50,11 @@ describe('LogzioApiClient retry behavior', () => {
       retryAttempts: 1,
     });
     const sleepSpy = vi
-      .spyOn(client as unknown as { sleep: unknown }, 'sleep' as never)
-      .mockResolvedValue(undefined as never);
+      .spyOn(
+        client as unknown as { sleep: (ms: number) => Promise<void> },
+        'sleep'
+      )
+      .mockResolvedValue(undefined);
 
     const axiosMock = vi
       .fn()
