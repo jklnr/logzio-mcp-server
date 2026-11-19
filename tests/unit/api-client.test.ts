@@ -171,8 +171,7 @@ describe('LogzioApiClient getLogStats transformation', () => {
     });
 
     const requestPayload = axiosMock.mock.calls[0]?.[0]?.data as
-      | { aggs?: Record<string, unknown> }
-      | undefined;
+      { aggs?: Record<string, unknown> } | undefined;
 
     expect(requestPayload).toBeDefined();
     expect(requestPayload?.aggs?.by_level).toBeDefined();
